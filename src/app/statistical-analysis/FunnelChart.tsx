@@ -1,4 +1,14 @@
 // src/app/statistical-analysis/FunnelChart.tsx
+"use client";
+
+import { useRef, useState } from "react";
+
+type UndecidedBreakdown = {
+  wishlist: number;
+  applied: number;
+  phoneScreen: number;
+  interview: number;
+};
 
 type Counts = {
   total: number;
@@ -7,6 +17,7 @@ type Counts = {
   offer: number;
   rejected: number;
   withdrawn: number;
+  undecidedBreakdown: UndecidedBreakdown;
 };
 
 const NODE_W = 14;
@@ -22,14 +33,22 @@ function scaleHeight(count: number, total: number, max: number, min: number) {
   return Math.max(min, h);
 }
 
-// Standard sankey-style link shape: two cubic beziers forming a tapered ribbon
 function flowPath(x1: number, y1Top: number, y1Bottom: number, x2: number, y2Top: number, y2Bottom: number) {
   const xi = (x1 + x2) / 2;
   return `M${x1},${y1Top} C${xi},${y1Top} ${xi},${y2Top} ${x2},${y2Top} L${x2},${y2Bottom} C${xi},${y2Bottom} ${xi},${y1Bottom} ${x1},${y1Bottom} Z`;
 }
 
 export default function FunnelChart({ counts }: { counts: Counts }) {
-  const { total, undecided, decided, offer, rejected, withdrawn } = counts;
+  const { total, undecided, decided, offer, rejected, withdrawn, undecidedBreakdown } = counts;
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number } | null>(null);
+
+  function handleUndecidedHover(e: React.MouseEvent) {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTooltip({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }
 
   if (total === 0) {
     return (
@@ -39,12 +58,10 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
     );
   }
 
-  // Source node (Applications) — fixed height, centered vertically
   const sourceH = 50;
   const sourceY = CHART_H / 2 - sourceH / 2;
   const sourceYMid = sourceY + sourceH / 2;
 
-  // Level 1: Undecided / Decided, stacked with a gap, scaled by proportion of total
   const GAP_1 = 16;
   const undecidedH = scaleHeight(undecided, total, 140, 10);
   const decidedH = scaleHeight(decided, total, 140, 10);
@@ -53,9 +70,7 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
 
   const undecidedY = level1Y;
   const decidedY = undecidedY + undecidedH + GAP_1;
-  const decidedYMid = decidedY + decidedH / 2;
 
-  // Level 2: Offer / Rejected / Withdrawn — only meaningful if decided > 0
   const decidedTotal = offer + rejected + withdrawn || 1;
   const GAP_2 = 14;
   const offerH = scaleHeight(offer, decidedTotal, 90, 8);
@@ -69,85 +84,128 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
   const withdrawnY = rejectedY + rejectedH + GAP_2;
 
   return (
-    <svg
-      viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-      width="100%"
-      role="img"
-      aria-label={`Application funnel: ${total} total, ${undecided} undecided, ${decided} decided (${offer} offer, ${rejected} rejected, ${withdrawn} withdrawn)`}
-    >
-      {/* Applications source node */}
-      <rect x={X_SOURCE} y={sourceY} width={NODE_W} height={sourceH} rx="4" style={{ fill: "var(--text-muted)" }} />
-      <text x={X_SOURCE + NODE_W + 10} y={sourceYMid - 6} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-        Applications
-      </text>
-      <text x={X_SOURCE + NODE_W + 10} y={sourceYMid + 12} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-        {total} total
-      </text>
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <svg
+        viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+        width="100%"
+        role="img"
+        aria-label={`Application funnel: ${total} total, ${undecided} undecided, ${decided} decided (${offer} offer, ${rejected} rejected, ${withdrawn} withdrawn)`}
+      >
+        <rect x={X_SOURCE} y={sourceY} width={NODE_W} height={sourceH} rx="4" style={{ fill: "var(--text-muted)" }} />
+        <text x={X_SOURCE + NODE_W + 10} y={sourceYMid - 6} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+          Applications
+        </text>
+        <text x={X_SOURCE + NODE_W + 10} y={sourceYMid + 12} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+          {total} total
+        </text>
 
-      {/* Flow: Applications -> Undecided */}
-      <path
-        d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, undecidedY, undecidedY + undecidedH)}
-        style={{ fill: "var(--text-muted)", fillOpacity: 0.25 }}
-      />
-      <rect x={X_LEVEL1} y={undecidedY} width={NODE_W} height={undecidedH} rx="4" style={{ fill: "var(--text-muted)" }} />
-      <text x={X_LEVEL1 + NODE_W + 10} y={undecidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-        Undecided
-      </text>
-      <text x={X_LEVEL1 + NODE_W + 10} y={undecidedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-        {undecided} in progress
-      </text>
+        {/* Flow: Applications -> Undecided (hoverable) */}
+        <path
+          d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, undecidedY, undecidedY + undecidedH)}
+          style={{
+            fill: "var(--text-muted)",
+            fillOpacity: tooltip ? 0.4 : 0.25,
+            cursor: "pointer",
+            transition: "fill-opacity 0.15s",
+          }}
+          onMouseMove={handleUndecidedHover}
+          onMouseLeave={() => setTooltip(null)}
+        />
+        <rect x={X_LEVEL1} y={undecidedY} width={NODE_W} height={undecidedH} rx="4" style={{ fill: "var(--text-muted)" }} />
+        <text x={X_LEVEL1 + NODE_W + 10} y={undecidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+          Undecided
+        </text>
+        <text x={X_LEVEL1 + NODE_W + 10} y={undecidedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+          {undecided} in progress
+        </text>
 
-      {/* Flow: Applications -> Decided */}
-      <path
-        d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, decidedY, decidedY + decidedH)}
-        style={{ fill: "var(--text-muted)", fillOpacity: 0.15 }}
-      />
-      <rect x={X_LEVEL1} y={decidedY} width={NODE_W} height={decidedH} rx="4" style={{ fill: "var(--text-muted)" }} />
-      <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-        Decided
-      </text>
-      <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-        {decided}
-      </text>
+        {/* Flow: Applications -> Decided */}
+        <path
+          d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, decidedY, decidedY + decidedH)}
+          style={{ fill: "var(--text-muted)", fillOpacity: 0.15 }}
+        />
+        <rect x={X_LEVEL1} y={decidedY} width={NODE_W} height={decidedH} rx="4" style={{ fill: "var(--text-muted)" }} />
+        <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+          Decided
+        </text>
+        <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+          {decided}
+        </text>
 
-      {/* Flow: Decided -> Offer */}
-      <path
-        d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, offerY, offerY + offerH)}
-        style={{ fill: "#22c55e", fillOpacity: 0.18 }}
-      />
-      <rect x={X_LEVEL2} y={offerY} width={NODE_W} height={offerH} rx="4" style={{ fill: "#22c55e" }} />
-      <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-        Offer
-      </text>
-      <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-        {offer}
-      </text>
+        <path
+          d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, offerY, offerY + offerH)}
+          style={{ fill: "#22c55e", fillOpacity: 0.18 }}
+        />
+        <rect x={X_LEVEL2} y={offerY} width={NODE_W} height={offerH} rx="4" style={{ fill: "#22c55e" }} />
+        <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+          Offer
+        </text>
+        <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+          {offer}
+        </text>
 
-      {/* Flow: Decided -> Rejected */}
-      <path
-        d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, rejectedY, rejectedY + rejectedH)}
-        style={{ fill: "var(--danger)", fillOpacity: 0.18 }}
-      />
-      <rect x={X_LEVEL2} y={rejectedY} width={NODE_W} height={rejectedH} rx="4" style={{ fill: "var(--danger)" }} />
-      <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-        Rejected
-      </text>
-      <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-        {rejected}
-      </text>
+        <path
+          d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, rejectedY, rejectedY + rejectedH)}
+          style={{ fill: "var(--danger)", fillOpacity: 0.18 }}
+        />
+        <rect x={X_LEVEL2} y={rejectedY} width={NODE_W} height={rejectedH} rx="4" style={{ fill: "var(--danger)" }} />
+        <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+          Rejected
+        </text>
+        <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+          {rejected}
+        </text>
 
-      {/* Flow: Decided -> Withdrawn */}
-      <path
-        d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, withdrawnY, withdrawnY + withdrawnH)}
-        style={{ fill: "var(--text-muted)", fillOpacity: 0.18 }}
-      />
-      <rect x={X_LEVEL2} y={withdrawnY} width={NODE_W} height={withdrawnH} rx="4" style={{ fill: "var(--text-muted)" }} />
-      <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-        Withdrawn
-      </text>
-      <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-        {withdrawn}
-      </text>
-    </svg>
+        <path
+          d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, withdrawnY, withdrawnY + withdrawnH)}
+          style={{ fill: "var(--text-muted)", fillOpacity: 0.18 }}
+        />
+        <rect x={X_LEVEL2} y={withdrawnY} width={NODE_W} height={withdrawnH} rx="4" style={{ fill: "var(--text-muted)" }} />
+        <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+          Withdrawn
+        </text>
+        <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+          {withdrawn}
+        </text>
+      </svg>
+
+      {tooltip && (
+        <div
+          style={{
+            position: "absolute",
+            left: tooltip.x + 12,
+            top: tooltip.y + 12,
+            background: "var(--background)",
+            border: "1px solid var(--border)",
+            borderRadius: 8,
+            padding: "0.6rem 0.85rem",
+            fontSize: "0.8rem",
+            color: "var(--text)",
+            pointerEvents: "none",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            minWidth: 140,
+            zIndex: 10,
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>Undecided breakdown</div>
+          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
+            <span>Wishlist</span>
+            <span>{undecidedBreakdown.wishlist}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
+            <span>Applied</span>
+            <span>{undecidedBreakdown.applied}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
+            <span>Phone screen</span>
+            <span>{undecidedBreakdown.phoneScreen}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-muted)" }}>
+            <span>Interview</span>
+            <span>{undecidedBreakdown.interview}</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

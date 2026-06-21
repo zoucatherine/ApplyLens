@@ -17,6 +17,12 @@ export default async function StatisticalAnalysisPage() {
   const rejected = applications.filter((a) => a.status === "REJECTED").length;
   const withdrawn = applications.filter((a) => a.status === "WITHDRAWN").length;
 
+  // Breakdown within Undecided, for the hover tooltip
+  const wishlist = applications.filter((a) => a.status === "WISHLIST").length;
+  const appliedCount = applications.filter((a) => a.status === "APPLIED").length;
+  const phoneScreen = applications.filter((a) => a.status === "PHONE_SCREEN").length;
+  const interview = applications.filter((a) => a.status === "INTERVIEW").length;
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1rem" }}>
       <Link
@@ -47,7 +53,17 @@ export default async function StatisticalAnalysisPage() {
           padding: "1.5rem",
         }}
       >
-        <FunnelChart counts={{ total, undecided, decided, offer, rejected, withdrawn }} />
+        <FunnelChart
+          counts={{
+            total,
+            undecided,
+            decided,
+            offer,
+            rejected,
+            withdrawn,
+            undecidedBreakdown: { wishlist, applied: appliedCount, phoneScreen, interview },
+          }}
+        />
       </div>
     </div>
   );
