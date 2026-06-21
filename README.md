@@ -56,8 +56,13 @@ prisma/
 ```
 
 ## What to build next
-1. Clicking a row → edit/detail page
+1. Input validation
 2. Kanban board view (drag cards between status columns)
-3. Follow-up reminder emails via Resend (cron job)
-4. Auth with Clerk or NextAuth (make it multi-user)
-5. Deploy to Vercel
+3. Improve Database Schema
+4. Add filtering (ex: show only interviews, only offers, sort by application date, etc.)
+5. Dashboard metrics
+6. Auth with Clerk or NextAuth (make it multi-user)
+7. Charts
+8. ML/NLP feature
+9. Follow-up reminder emails via Resend (cron job)
+11. Deploy to Vercel
