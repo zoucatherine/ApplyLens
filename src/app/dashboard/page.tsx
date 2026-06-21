@@ -1,16 +1,13 @@
-"use client";
 // src/app/dashboard/page.tsx
-// This is a Server Component — data is fetched on the server
-
 import { prisma } from "@/lib/prisma";
 import { ApplicationStatus, PIPELINE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/types";
+import ApplicationRow from "./ApplicationRow";
 
 export default async function DashboardPage() {
   const applications = await prisma.application.findMany({
     orderBy: { updatedAt: "desc" },
   });
 
-  // Count by status for the stats bar
   const counts = PIPELINE_STATUSES.reduce(
     (acc, status) => {
       acc[status] = applications.filter((a) => a.status === status).length;
@@ -19,10 +16,6 @@ export default async function DashboardPage() {
     {} as Record<ApplicationStatus, number>
   );
 
-  const rowStyle = {
-    cursor: "pointer",
-    transition: "background 0.15s",
-  };
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1rem" }}>
@@ -92,41 +85,7 @@ export default async function DashboardPage() {
           </thead>
           <tbody>
             {applications.map((app) => (
-              <tr
-                key={app.id}
-                style={{
-                  ...rowStyle,
-                  borderBottom: "1px solid var(--border)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "var(--surface)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                }}
-                onClick={() => window.location.href = `/applications/${app.id}/edit`}
-              >
-                <td style={{ padding: "0.85rem 1rem", fontWeight: 600 }}>{app.company}</td>
-                <td style={{ padding: "0.85rem 1rem", color: "var(--text-muted)" }}>{app.role}</td>
-                <td style={{ padding: "0.85rem 1rem" }}>
-                  <span style={{
-                    background: STATUS_COLORS[app.status as ApplicationStatus] + "22",
-                    color: STATUS_COLORS[app.status as ApplicationStatus],
-                    padding: "0.2rem 0.6rem",
-                    borderRadius: 20,
-                    fontSize: "0.8rem",
-                    fontWeight: 600,
-                  }}>
-                    {STATUS_LABELS[app.status as ApplicationStatus]}
-                  </span>
-                </td>
-                <td style={{ padding: "0.85rem 1rem", color: "var(--text-muted)", fontSize: "0.875rem" }}>
-                  {new Date(app.appliedDate).toLocaleDateString()}
-                </td>
-                <td style={{ padding: "0.85rem 1rem", color: "var(--text-muted)", fontSize: "0.875rem" }}>
-                  {app.followUpDate ? new Date(app.followUpDate).toLocaleDateString() : "—"}
-                </td>
-              </tr>
+              <ApplicationRow key={app.id} app={app} />
             ))}
           </tbody>
         </table>

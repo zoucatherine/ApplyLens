@@ -4,6 +4,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ApplicationSchema } from "@/lib/validations";
 
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const application = await prisma.application.findUnique({
+    where: { id: params.id },
+  });
+
+  if (!application) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(application);
+}
+
 // PATCH /api/applications/:id — update an application (status, notes, etc.)
 export async function PATCH(
   request: NextRequest,

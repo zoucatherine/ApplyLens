@@ -1,5 +1,6 @@
 {
-  "/applications/new/page": "app/applications/new/page.js",
   "/applications/[id]/edit/page": "app/applications/[id]/edit/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/not-found": "app/not-found.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/api/applications/[id]/route": "app/api/applications/[id]/route.js"
 }
