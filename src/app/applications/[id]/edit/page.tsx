@@ -30,6 +30,7 @@ export default function EditApplicationPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
@@ -95,6 +96,29 @@ export default function EditApplicationPage() {
       setError("Something went wrong. Please try again.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      `Delete the application for ${form.company || "this company"}? This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError("");
+
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete application");
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setError("Failed to delete. Please try again.");
+      setDeleting(false);
     }
   }
 
@@ -184,7 +208,7 @@ export default function EditApplicationPage() {
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || deleting}
             style={{
               background: "var(--accent)",
               color: "#fff",
@@ -199,6 +223,7 @@ export default function EditApplicationPage() {
           <button
             type="button"
             onClick={() => router.back()}
+            disabled={saving || deleting}
             style={{
               background: "var(--surface)",
               color: "var(--text-muted)",
@@ -208,6 +233,22 @@ export default function EditApplicationPage() {
             }}
           >
             Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={saving || deleting}
+            style={{
+              background: "transparent",
+              color: "var(--danger)",
+              padding: "0.65rem 1.25rem",
+              borderRadius: 8,
+              border: "1px solid var(--danger)",
+              marginLeft: "auto",
+              opacity: deleting ? 0.7 : 1,
+            }}
+          >
+            {deleting ? "Deleting..." : "Delete"}
           </button>
         </div>
       </form>
