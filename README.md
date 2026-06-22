@@ -56,10 +56,10 @@ prisma/
 ```
 
 ## What to build next
-1. Input validation
-2. Kanban board view (drag cards between status columns)
-3. Improve Database Schema
-4. Add filtering (ex: show only interviews, only offers, sort by application date, etc.)
+1. ~~Input validation~~
+2. ~~Kanban board view (drag cards between status columns)~~
+3. ~~Improve Database Schema~~
+4. ~~Add filtering (ex: show only interviews, only offers, sort by application date, etc.)~~
 5. Dashboard metrics
 6. Auth with Clerk or NextAuth (make it multi-user)
 7. Charts
