@@ -16,10 +16,12 @@ export const ApplicationSchema = z.object({
   ]),
   appliedDate: z.string().optional(),
   followUpDate: z.string().nullable().optional(),
+  decisionDate: z.string().nullable().optional(),
   jobUrl: z.string().url("Must be a valid URL").nullable().optional().or(z.literal("")),
   salary: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
 });
 
 export type ApplicationInput = z.infer<typeof ApplicationSchema>;

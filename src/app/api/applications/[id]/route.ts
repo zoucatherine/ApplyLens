@@ -33,7 +33,10 @@ export async function PATCH(
       data: {
         ...validated,
         jobUrl: validated.jobUrl || null,
+        appliedDate: validated.appliedDate ? new Date(validated.appliedDate) : undefined,
         followUpDate: validated.followUpDate ? new Date(validated.followUpDate) : null,
+        decisionDate: validated.decisionDate ? new Date(validated.decisionDate) : null,
+        source: validated.source ?? undefined,
       },
     });
 

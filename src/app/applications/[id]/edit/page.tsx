@@ -39,10 +39,12 @@ export default function EditApplicationPage() {
     status: "APPLIED" as ApplicationStatus,
     appliedDate: "",
     followUpDate: "",
+    decisionDate: "",
     jobUrl: "",
     salary: "",
     location: "",
     notes: "",
+    source: "",
   });
 
   const id = params.id as string;
@@ -60,10 +62,12 @@ export default function EditApplicationPage() {
           status: data.status,
           appliedDate: data.appliedDate ? new Date(data.appliedDate).toISOString().split("T")[0] : "",
           followUpDate: data.followUpDate ? new Date(data.followUpDate).toISOString().split("T")[0] : "",
+          decisionDate: data.decisionDate ? new Date(data.decisionDate).toISOString().split("T")[0] : "",
           jobUrl: data.jobUrl || "",
           salary: data.salary || "",
           location: data.location || "",
           notes: data.notes || "",
+          source: data.source || "",
         });
       } catch (err) {
         setError("Failed to load application");
@@ -177,6 +181,18 @@ export default function EditApplicationPage() {
           <div>
             <label style={labelStyle}>Follow-up Reminder</label>
             <input style={inputStyle} type="date" value={form.followUpDate} onChange={set("followUpDate")} />
+          </div>
+        </div>
+
+        {/* Decision Date + Source */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div>
+            <label style={labelStyle}>Decision Date</label>
+            <input style={inputStyle} type="date" value={form.decisionDate} onChange={set("decisionDate")} />
+          </div>
+          <div>
+            <label style={labelStyle}>Source</label>
+            <input style={inputStyle} value={form.source} onChange={set("source")} placeholder="LinkedIn, Referral, Company site..." />
           </div>
         </div>
 

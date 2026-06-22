@@ -16,10 +16,12 @@ export interface Application {
   status: ApplicationStatus;
   appliedDate: string;
   followUpDate: string | null;
+  decisionDate: string | null;
   jobUrl: string | null;
   salary: string | null;
   location: string | null;
   notes: string | null;
+  source: string | null;
   createdAt: string;
   updatedAt: string;
 }

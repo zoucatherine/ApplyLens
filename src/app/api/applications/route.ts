@@ -29,6 +29,8 @@ export async function POST(request: NextRequest) {
         jobUrl: validated.jobUrl || null,
         appliedDate: validated.appliedDate ? new Date(validated.appliedDate) : new Date(),
         followUpDate: validated.followUpDate ? new Date(validated.followUpDate) : null,
+        decisionDate: validated.decisionDate ? new Date(validated.decisionDate) : null,
+        source: validated.source || null,
       },
     });
 

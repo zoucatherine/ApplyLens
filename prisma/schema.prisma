@@ -30,6 +30,8 @@ model Application {
   salary        String?
   location      String?
   notes         String?
+  source        String?     // NEW
+  decisionDate  DateTime?   // NEW
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 

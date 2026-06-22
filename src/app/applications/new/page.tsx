@@ -37,10 +37,12 @@ export default function NewApplicationPage() {
     status: "APPLIED" as ApplicationStatus,
     appliedDate: new Date().toISOString().split("T")[0],
     followUpDate: "",
+    decisionDate: "",
     jobUrl: "",
     salary: "",
     location: "",
     notes: "",
+    source: "",
   });
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -115,6 +117,18 @@ export default function NewApplicationPage() {
           <div>
             <label style={labelStyle}>Follow-up Reminder</label>
             <input style={inputStyle} type="date" value={form.followUpDate} onChange={set("followUpDate")} />
+          </div>
+        </div>
+
+        {/* Decision Date + Source */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div>
+            <label style={labelStyle}>Decision Date</label>
+            <input style={inputStyle} type="date" value={form.decisionDate} onChange={set("decisionDate")} />
+          </div>
+          <div>
+            <label style={labelStyle}>Source</label>
+            <input style={inputStyle} value={form.source} onChange={set("source")} placeholder="LinkedIn, Referral, Company site..." />
           </div>
         </div>
 
