@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApplicationStatus, PIPELINE_STATUSES, STATUS_LABELS } from "@/types";
+import { APPLICATION_SOURCES, ApplicationSource, SOURCE_LABELS } from "@/types";
 
 const inputStyle = {
   width: "100%",
@@ -44,7 +45,7 @@ export default function EditApplicationPage() {
     salary: "",
     location: "",
     notes: "",
-    source: "",
+    source: "" as ApplicationSource | "",
   });
 
   const id = params.id as string;

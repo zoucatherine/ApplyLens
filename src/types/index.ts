@@ -56,3 +56,32 @@ export const PIPELINE_STATUSES: ApplicationStatus[] = [
   "REJECTED",
   "WITHDRAWN",
 ];
+
+export type ApplicationSource =
+  | "LINKEDIN"
+  | "HANDSHAKE"
+  | "REFERRAL"
+  | "COMPANY_WEBSITE"
+  | "INDEED"
+  | "CAREER_FAIR"
+  | "OTHER";
+
+export const SOURCE_LABELS: Record<ApplicationSource, string> = {
+  LINKEDIN: "LinkedIn",
+  HANDSHAKE: "Handshake",
+  REFERRAL: "Referral",
+  COMPANY_WEBSITE: "Company Website",
+  INDEED: "Indeed",
+  CAREER_FAIR: "Career Fair",
+  OTHER: "Other",
+};
+
+export const APPLICATION_SOURCES: ApplicationSource[] = [
+  "LINKEDIN",
+  "HANDSHAKE",
+  "REFERRAL",
+  "COMPANY_WEBSITE",
+  "INDEED",
+  "CAREER_FAIR",
+  "OTHER",
+];

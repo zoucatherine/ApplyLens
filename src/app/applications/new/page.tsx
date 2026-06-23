@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApplicationStatus, PIPELINE_STATUSES, STATUS_LABELS } from "@/types";
+import { APPLICATION_SOURCES, ApplicationSource, SOURCE_LABELS } from "@/types";
 
 const inputStyle = {
   width: "100%",
@@ -42,7 +43,7 @@ export default function NewApplicationPage() {
     salary: "",
     location: "",
     notes: "",
-    source: "",
+    source: "" as ApplicationSource | "",
   });
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -128,7 +129,12 @@ export default function NewApplicationPage() {
           </div>
           <div>
             <label style={labelStyle}>Source</label>
-            <input style={inputStyle} value={form.source} onChange={set("source")} placeholder="LinkedIn, Referral, Company site..." />
+            <select style={inputStyle} value={form.source} onChange={set("source")}>
+              <option value="">Select a source...</option>
+              {APPLICATION_SOURCES.map((s) => (
+                <option key={s} value={s}>{SOURCE_LABELS[s]}</option>
+              ))}
+            </select>
           </div>
         </div>
 

@@ -18,6 +18,15 @@ enum ApplicationStatus {
   REJECTED
   WITHDRAWN
 }
+enum ApplicationSource {
+  LINKEDIN
+  HANDSHAKE
+  REFERRAL
+  COMPANY_WEBSITE
+  INDEED
+  CAREER_FAIR
+  OTHER
+}
 
 model Application {
   id            String            @id @default(cuid())
@@ -30,7 +39,7 @@ model Application {
   salary        String?
   location      String?
   notes         String?
-  source        String?     // NEW
+  source        ApplicationSource?     // NEW
   decisionDate  DateTime?   // NEW
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
