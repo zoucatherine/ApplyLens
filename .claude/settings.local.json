@@ -1,9 +1,0 @@
-{
-  "env": {
-    "ANTHROPIC_AUTH_TOKEN": "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",
-    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "nvidia/nemotron-3-ultra-550b-a55b:free",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "nvidia/nemotron-3-ultra-550b-a55b:free"
-  }
-}
