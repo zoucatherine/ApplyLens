@@ -1,5 +1,6 @@
 // src/app/statistical-analysis/StatsCards.tsx
 
+
 type Props = {
   total: number;
   responseRate: number | null;

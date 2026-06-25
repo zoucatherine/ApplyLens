@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ApplicationStatus } from "@/types";
 import FunnelChart from "./FunnelChart";
 import StatsCards from "./StatsCards";
+import { SOURCE_LABELS, ApplicationSource } from "@/types";
 
 const UNDECIDED: ApplicationStatus[] = ["WISHLIST", "APPLIED", "PHONE_SCREEN", "INTERVIEW"] as ApplicationStatus[];
 const DECIDED: ApplicationStatus[] = ["OFFER", "REJECTED", "WITHDRAWN"] as ApplicationStatus[];
@@ -38,9 +39,10 @@ export default async function StatisticalAnalysisPage() {
     if (src) acc[src] = (acc[src] ?? 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  const topSource = Object.keys(sourceCounts).length > 0
-    ? Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])[0][0]
+  const topSourceKey = Object.keys(sourceCounts).length > 0
+    ? Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])[0][0] as ApplicationSource
     : null;
+  const topSource = topSourceKey ? SOURCE_LABELS[topSourceKey] : null;
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1rem" }}>
