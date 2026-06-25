@@ -7,20 +7,50 @@ import { ApplicationStatus, PIPELINE_STATUSES, STATUS_COLORS, STATUS_LABELS } fr
 import ApplicationRow from "./ApplicationRow";
 
 type Props = {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    sort?: string;
+    order?: string;
+  }>;
 };
 
 export default async function DashboardPage({ searchParams }: Props) {
-  const { status: statusParam } = await searchParams;
+  const { status: statusParam, sort, order } = await searchParams;
   const statusFilter = statusParam as ApplicationStatus | undefined;
+  const sortField = sort as "company" | "role" | "appliedDate" | "followUpDate" | undefined;
+  const sortOrder = order === "asc" ? "asc" : "desc";
+
+  // Map sort fields to Prisma field names
+  const sortFieldMap: Record<string, string> = {
+    company: "company",
+    role: "role",
+    appliedDate: "appliedDate",
+    followUpDate: "followUpDate",
+  };
+
+  // Helper to build sort URL preserving other params
+  const buildSortUrl = (field: string) => {
+    const params = new URLSearchParams();
+    if (statusFilter) params.set("status", statusFilter);
+    if (sort === field) {
+      params.set("sort", field);
+      params.set("order", sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      params.set("sort", field);
+      params.set("order", "asc");
+    }
+    return `/dashboard?${params.toString()}`;
+  };
 
   // Build where clause for Prisma
   const where = statusFilter ? { status: statusFilter } : {};
 
-  // Fetch filtered applications
+  // Fetch filtered applications with sorting
   const applications = await prisma.application.findMany({
     where,
-    orderBy: { updatedAt: "desc" },
+    orderBy: sortField && sortFieldMap[sortField]
+      ? { [sortFieldMap[sortField]]: sortOrder }
+      : { updatedAt: "desc" },
   });
 
   // For stats, we need total counts (unfiltered) to show in the filter bar
@@ -88,7 +118,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Job Tracker</h1>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Dashboard</h1>
           <p style={{ color: "var(--text-muted)", marginTop: 4 }}>
             {statusFilter ? `Showing ${STATUS_LABELS[statusFilter]}` : "All applications"}
             {applications.length > 0 && ` — ${applications.length} result${applications.length !== 1 ? "s" : ""}`}
@@ -96,20 +126,6 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
         
                 <div style={{ display: "flex", gap: "0.75rem" }}>
-          <Link
-            href="/statistical-analysis"
-            style={{
-              background: "var(--surface)",
-              color: "var(--text)",
-              border: "1px solid var(--border)",
-              padding: "0.6rem 1.25rem",
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: "0.9rem",
-            }}
-          >
-            📊 Statistics
-          </Link>
           <Link
             href="/applications/new"
             style={{
@@ -203,9 +219,47 @@ export default async function DashboardPage({ searchParams }: Props) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--border)", textAlign: "left" }}>
-              {["Company", "Role", "Status", "Applied", "Follow-up", ""].map((h) => (
-                <th key={h} style={{ padding: "0.6rem 1rem", color: "var(--text-muted)", fontWeight: 500, fontSize: "0.85rem" }}>
-                  {h}
+              {[
+                { key: "company", label: "Company", sortable: true },
+                { key: "role", label: "Role", sortable: true },
+                { key: "status", label: "Status", sortable: false },
+                { key: "appliedDate", label: "Applied", sortable: true },
+                { key: "followUpDate", label: "Follow-up", sortable: true },
+                { key: "", label: "", sortable: false },
+              ].map((col) => (
+                <th
+                  key={col.key}
+                  style={{
+                    padding: "0.6rem 1rem",
+                    color: col.sortable ? "var(--text)" : "var(--text-muted)",
+                    fontWeight: 500,
+                    fontSize: "0.85rem",
+                    cursor: col.sortable ? "pointer" : "default",
+                    userSelect: "none",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {col.sortable ? (
+                    <a
+                      href={buildSortUrl(col.key)}
+                      style={{
+                        color: "inherit",
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.35rem",
+                      }}
+                    >
+                      {col.label}
+                      {sort === col.key && (
+                        <span style={{ fontSize: "0.7rem" }}>
+                          {sortOrder === "asc" ? "▲" : "▼"}
+                        </span>
+                      )}
+                    </a>
+                  ) : (
+                    col.label
+                  )}
                 </th>
               ))}
             </tr>
