@@ -57,14 +57,17 @@ export const PIPELINE_STATUSES: ApplicationStatus[] = [
   "WITHDRAWN",
 ];
 
-export type ApplicationSource =
-  | "LINKEDIN"
-  | "HANDSHAKE"
-  | "REFERRAL"
-  | "COMPANY_WEBSITE"
-  | "INDEED"
-  | "CAREER_FAIR"
-  | "OTHER";
+export const APPLICATION_SOURCES = [
+  "LINKEDIN",
+  "HANDSHAKE",
+  "REFERRAL",
+  "COMPANY_WEBSITE",
+  "INDEED",
+  "CAREER_FAIR",
+  "OTHER",
+] as const;
+
+export type ApplicationSource = (typeof APPLICATION_SOURCES)[number];
 
 export const SOURCE_LABELS: Record<ApplicationSource, string> = {
   LINKEDIN: "LinkedIn",
@@ -75,13 +78,3 @@ export const SOURCE_LABELS: Record<ApplicationSource, string> = {
   CAREER_FAIR: "Career Fair",
   OTHER: "Other",
 };
-
-export const APPLICATION_SOURCES: ApplicationSource[] = [
-  "LINKEDIN",
-  "HANDSHAKE",
-  "REFERRAL",
-  "COMPANY_WEBSITE",
-  "INDEED",
-  "CAREER_FAIR",
-  "OTHER",
-];

@@ -33,8 +33,57 @@ export default async function DashboardPage({ searchParams }: Props) {
     {} as Record<ApplicationStatus, number>
   );
 
+  // Analytics calculations
+  const totalApps = applications.length;
+  const appliedCount = applications.filter(a => a.status !== "WISHLIST" && a.status !== "WITHDRAWN").length;
+  const responseCount = applications.filter(a => ["PHONE_SCREEN", "INTERVIEW", "OFFER", "REJECTED"].includes(a.status)).length;
+  const interviewCount = applications.filter(a => ["PHONE_SCREEN", "INTERVIEW"].includes(a.status)).length;
+  const offerCount = applications.filter(a => a.status === "OFFER").length;
+  const rejectedCount = applications.filter(a => a.status === "REJECTED").length;
+
+  const responseRate = appliedCount > 0 ? Math.round((responseCount / appliedCount) * 100) : 0;
+  const interviewRate = appliedCount > 0 ? Math.round((interviewCount / appliedCount) * 100) : 0;
+  const offerRate = appliedCount > 0 ? Math.round((offerCount / appliedCount) * 100) : 0;
+
+  const appsWithDates = applications.filter(a => a.followUpDate || a.decisionDate);
+  const avgDaysToResponse = appsWithDates.length > 0
+    ? Math.round(appsWithDates.reduce((sum, a) => {
+        const applied = new Date(a.appliedDate).getTime();
+        const response = new Date(a.followUpDate || a.decisionDate!).getTime();
+        return sum + (response - applied) / (1000 * 60 * 60 * 24);
+      }, 0) / appsWithDates.length)
+    : 0;
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1rem" }}>
+      {/* Analytics Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Applications</div>
+          <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text)", marginTop: "0.5rem" }}>{totalApps}</div>
+        </div>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Response Rate</div>
+          <div style={{ fontSize: "2rem", fontWeight: 700, color: "#60a5fa", marginTop: "0.5rem" }}>{responseRate}%</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>{responseCount} of {appliedCount} responded</div>
+        </div>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Interview Rate</div>
+          <div style={{ fontSize: "2rem", fontWeight: 700, color: "#f59e0b", marginTop: "0.5rem" }}>{interviewRate}%</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>{interviewCount} interviews</div>
+        </div>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Offer Rate</div>
+          <div style={{ fontSize: "2rem", fontWeight: 700, color: "#34d399", marginTop: "0.5rem" }}>{offerRate}%</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>{offerCount} offers</div>
+        </div>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Avg Days to Response</div>
+          <div style={{ fontSize: "2rem", fontWeight: 700, color: "#a78bfa", marginTop: "0.5rem" }}>{avgDaysToResponse || "—"}</div>
+          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>{appsWithDates.length} tracked</div>
+        </div>
+      </div>
+
       {/* Header */}
       
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>

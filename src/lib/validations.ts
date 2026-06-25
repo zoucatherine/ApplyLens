@@ -1,6 +1,7 @@
 // src/lib/validations.ts
 
 import { z } from "zod";
+import { APPLICATION_SOURCES } from "@/types";
 
 export const ApplicationSchema = z.object({
   company: z.string().min(1, "Company name is required"),
@@ -21,7 +22,7 @@ export const ApplicationSchema = z.object({
   salary: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
-  source: z.string().nullable().optional(),
+  source: z.enum(APPLICATION_SOURCES).optional(),
 });
 
 export type ApplicationInput = z.infer<typeof ApplicationSchema>;
