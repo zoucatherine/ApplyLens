@@ -73,7 +73,7 @@ export default async function StatisticalAnalysisPage() {
       {/* Structured Visual Funnel Panel Card Container */}
       <div
         style={{
-          background: "rgba(20, 15, 35, 0.6)",
+          background: "rgba(20, 15, 35, 0.8)",
           border: "1px solid rgba(255, 255, 255, 0.06)",
           borderRadius: 12,
           padding: "2rem",

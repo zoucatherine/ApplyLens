@@ -24,73 +24,108 @@ export default function StatsCards({
   trackedDatesCount,
 }: Props) {
   return (
-    <div 
-      style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
-        gap: "1rem", 
-        marginBottom: "1.5rem" 
-      }}
-    >
-      
-      {/* Total Applications */}
-      <div style={cardStyle}>
-        <div style={labelStyle}>Total Applications</div>
-        <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#fff", marginTop: "0.25rem" }}>
-          {totalApps}
-        </div>
-      </div>
+    <>
+      {/* Component-scoped Hover Effects */}
+      <style>{`
+        .stat-card {
+          background: rgba(20, 15, 35, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 12px;
+          padding: 1rem 1.15rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+        }
+        .stat-card:hover {
+          transform: translateY(-2px);
+        }
+        
+        /* Total Apps - White/Purple Glow */
+        .card-total:hover {
+          border-color: rgba(255, 255, 255, 0.3);
+          box-shadow: 0 0 16px rgba(255, 255, 255, 0.06);
+        }
+        /* Response Rate - Blue Glow */
+        .card-response:hover {
+          border-color: rgba(59, 130, 246, 0.4);
+          box-shadow: 0 0 16px rgba(59, 130, 246, 0.15);
+        }
+        /* Interview Rate - Amber Glow */
+        .card-interview:hover {
+          border-color: rgba(245, 158, 11, 0.4);
+          box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+        }
+        /* Offer Rate - Green Glow */
+        .card-offer:hover {
+          border-color: rgba(16, 185, 129, 0.4);
+          box-shadow: 0 0 16px rgba(16, 185, 129, 0.15);
+        }
+        /* Avg Days - Purple Glow */
+        .card-avg:hover {
+          border-color: rgba(167, 139, 250, 0.4);
+          box-shadow: 0 0 16px rgba(167, 139, 250, 0.15);
+        }
+      `}</style>
 
-      {/* Response Rate */}
-      <div style={cardStyle}>
-        <div style={labelStyle}>Response Rate</div>
-        <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#3b82f6", marginTop: "0.25rem" }}>
-          {responseRate}%
+      <div 
+        style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
+          gap: "1rem", 
+          marginBottom: "1.5rem" 
+        }}
+      >
+        
+        {/* Total Applications */}
+        <div className="stat-card card-total">
+          <div style={labelStyle}>Total Applications</div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#fff", marginTop: "0.25rem" }}>
+            {totalApps}
+          </div>
         </div>
-        <div style={subTextStyle}>{responseCount} of {appliedCount} responded</div>
-      </div>
 
-      {/* Interview Rate */}
-      <div style={cardStyle}>
-        <div style={labelStyle}>Interview Rate</div>
-        <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#f59e0b", marginTop: "0.25rem" }}>
-          {interviewRate}%
+        {/* Response Rate */}
+        <div className="stat-card card-response">
+          <div style={labelStyle}>Response Rate</div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#3b82f6", marginTop: "0.25rem" }}>
+            {responseRate}%
+          </div>
+          <div style={subTextStyle}>{responseCount} of {appliedCount} responded</div>
         </div>
-        <div style={subTextStyle}>{interviewCount} interviews</div>
-      </div>
 
-      {/* Offer Rate */}
-      <div style={cardStyle}>
-        <div style={labelStyle}>Offer Rate</div>
-        <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#10b981", marginTop: "0.25rem" }}>
-          {offerRate}%
+        {/* Interview Rate */}
+        <div className="stat-card card-interview">
+          <div style={labelStyle}>Interview Rate</div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#f59e0b", marginTop: "0.25rem" }}>
+            {interviewRate}%
+          </div>
+          <div style={subTextStyle}>{interviewCount} interviews</div>
         </div>
-        <div style={subTextStyle}>{offerCount} offers</div>
-      </div>
 
-      {/* Avg Days to Response */}
-      <div style={cardStyle}>
-        <div style={labelStyle}>Avg Days to Response</div>
-        <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#a78bfa", marginTop: "0.25rem" }}>
-          {avgDaysToResponse || "—"}
+        {/* Offer Rate */}
+        <div className="stat-card card-offer">
+          <div style={labelStyle}>Offer Rate</div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#10b981", marginTop: "0.25rem" }}>
+            {offerRate}%
+          </div>
+          <div style={subTextStyle}>{offerCount} offers</div>
         </div>
-        <div style={subTextStyle}>{trackedDatesCount} tracked</div>
+
+        {/* Avg Days to Response */}
+        <div className="stat-card card-avg">
+          <div style={labelStyle}>Avg Days to Response</div>
+          <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#a78bfa", marginTop: "0.25rem" }}>
+            {avgDaysToResponse || "—"}
+          </div>
+          <div style={subTextStyle}>{trackedDatesCount} tracked</div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
 // Consistent Design Token Objects 
-const cardStyle: React.CSSProperties = {
-  background: "rgba(20, 15, 35, 0.6)",
-  border: "1px solid rgba(255, 255, 255, 0.06)",
-  borderRadius: 12,
-  padding: "1rem 1.15rem",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center"
-};
-
 const labelStyle: React.CSSProperties = {
   fontSize: "0.72rem",
   fontWeight: 600,
