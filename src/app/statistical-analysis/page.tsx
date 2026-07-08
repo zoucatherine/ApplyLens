@@ -1,5 +1,4 @@
-// src/app/statistical-analysis/page.tsx
-import Link from "next/link";
+import TransitionLink from "@/components/TransitionLink";
 import { prisma } from "@/lib/prisma";
 import { ApplicationStatus } from "@/types";
 import FunnelChart from "./FunnelChart";
@@ -42,40 +41,72 @@ export default async function StatisticalAnalysisPage() {
     : 0;
 
   return (
-    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "1.5rem 2rem" }}>
-      <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Statistics</h1>
-      {/* Reduced bottom margin below description text */}
-      <p style={{ color: "var(--text-muted)", marginTop: 4, marginBottom: "1.25rem", fontSize: "0.9rem" }}>
-        How your applications are tracking, decided vs still in progress.
-      </p>
+    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "2rem 2.5rem" }}>
+      
+      {/* Header with back navigation button matching Profile and Skills pages */}
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
+        
+        <div>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Statistical Analysis</h1>
+          <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "0.875rem", marginTop: 4 }}>
+            How your applications are tracking, decided vs still in progress.
+          </p>
+        </div>
+      </div>
 
-      <StatsCards
-        totalApps={totalApps}
-        responseRate={responseRate}
-        appliedCount={appliedCountForRate}
-        responseCount={responseCount}
-        interviewRate={interviewRate}
-        interviewCount={interviewCount}
-        offerRate={offerRate}
-        offerCount={offerCount}
-        avgDaysToResponse={avgDaysToResponse}
-        trackedDatesCount={appsWithDates.length}
-      />
+      {/* Main Aggregation Cards Layout Group */}
+      <div style={{ marginBottom: "2rem" }}>
+        <StatsCards
+          totalApps={totalApps}
+          responseRate={responseRate}
+          appliedCount={appliedCountForRate}
+          responseCount={responseCount}
+          interviewRate={interviewRate}
+          interviewCount={interviewCount}
+          offerRate={offerRate}
+          offerCount={offerCount}
+          avgDaysToResponse={avgDaysToResponse}
+          trackedDatesCount={appsWithDates.length}
+        />
+      </div>
 
-      {/* Compact layout styling for the Funnel Box container */}
+      {/* Structured Visual Funnel Panel Card Container */}
       <div
         style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          padding: "1rem 1.25rem",
-          maxHeight: "380px", 
+          background: "rgba(20, 15, 35, 0.6)",
+          border: "1px solid rgba(255, 255, 255, 0.06)",
+          borderRadius: 12,
+          padding: "2rem",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center"
         }}
       >
-        <FunnelChart counts={{ total, undecided, decided, offer, rejected, withdrawn, undecidedBreakdown: { wishlist, applied: appliedCount, phoneScreen, interview } }} />
+        <div style={{ marginBottom: "1.5rem" }}>
+          <h3 style={{ fontSize: "0.95rem", fontWeight: 600, color: "rgba(255, 255, 255, 0.85)", margin: 0 }}>
+            Pipeline Conversion Funnel
+          </h3>
+          <p style={{ color: "rgba(255, 255, 255, 0.35)", fontSize: "0.78rem", marginTop: 4, marginBottom: 0 }}>
+            Visualizing structural conversion and breakdown yield drops across active job stages.
+          </p>
+        </div>
+
+        <FunnelChart 
+          counts={{ 
+            total, 
+            undecided, 
+            decided, 
+            offer, 
+            rejected, 
+            withdrawn, 
+            undecidedBreakdown: { 
+              wishlist, 
+              applied: appliedCount, 
+              phoneScreen, 
+              interview 
+            } 
+          }} 
+        />
       </div>
     </div>
   );
