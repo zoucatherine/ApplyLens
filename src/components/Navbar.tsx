@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import TransitionLink from "@/components/TransitionLink";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
@@ -31,7 +31,7 @@ export default function Sidebar() {
       {NAV_LINKS.map(({ label, href, icon }) => {
         const active = pathname === href;
         return (
-          <Link
+          <TransitionLink
             key={href}
             href={href}
             style={{
@@ -62,7 +62,7 @@ export default function Sidebar() {
           >
             <i className={`ti ${icon}`} style={{ fontSize: 17 }} aria-hidden />
             {label}
-          </Link>
+          </TransitionLink>
         );
       })}
     </nav>
@@ -71,7 +71,7 @@ export default function Sidebar() {
   const sidebarInner = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "1.25rem 0.85rem" }}>
       {/* Brand */}
-      <Link
+      <TransitionLink
         href="/"
         style={{
           fontWeight: 800,
@@ -88,7 +88,7 @@ export default function Sidebar() {
         }}
       >
         ApplyLens
-      </Link>
+      </TransitionLink>
 
       {/* Nav links */}
       {links}
@@ -139,16 +139,20 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside style={{
-        position: "fixed",
-        top: 0, left: 0, bottom: 0,
-        width: 220,
-        background: "rgba(18, 6, 40, 0.97)",
-        borderRight: "1px solid rgba(255,255,255,0.07)",
-        zIndex: 50,
-        display: "flex",
-        flexDirection: "column",
-      }} className="sidebar-desktop">
+      <aside 
+        style={{
+          position: "fixed",
+          top: 0, left: 0, bottom: 0,
+          width: 220,
+          background: "rgba(18, 6, 40, 0.97)",
+          borderRight: "1px solid rgba(255,255,255,0.07)",
+          zIndex: 50,
+          display: "flex",
+          flexDirection: "column",
+          viewTransitionName: "main-sidebar", // FIXED: Prevents desktop view transition flash
+        }} 
+        className="sidebar-desktop sidebar-container"
+      >
         {sidebarInner}
       </aside>
 
@@ -165,7 +169,7 @@ export default function Sidebar() {
         justifyContent: "space-between",
         padding: "0 1rem",
       }} className="sidebar-mobile-bar">
-        <Link
+        <TransitionLink
           href="/"
           style={{
             fontWeight: 800,
@@ -178,7 +182,7 @@ export default function Sidebar() {
           }}
         >
           ApplyLens
-        </Link>
+        </TransitionLink>
         <button
           onClick={() => setMobileOpen((o) => !o)}
           aria-label="Toggle menu"
@@ -237,8 +241,9 @@ export default function Sidebar() {
           zIndex: 49,
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s ease",
+          viewTransitionName: "main-sidebar", // FIXED: Prevents mobile view transition slide/fade anomaly
         }}
-        className="sidebar-mobile-drawer"
+        className="sidebar-mobile-drawer sidebar-container"
       >
         {sidebarInner}
       </div>
