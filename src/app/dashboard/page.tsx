@@ -13,17 +13,25 @@ type Props = {
     sort?: string;
     order?: string;
     search?: string;
-    add?: string; // Query param to trigger modal state
+    add?: string;
+    edit?: string; // Query param to trigger editing modal state
   }>;
 };
 
 export default async function DashboardPage({ searchParams }: Props) {
-  const { status: statusParam, sort, order, search, add } = await searchParams;
+  const { status: statusParam, sort, order, search, add, edit } = await searchParams;
   const statusFilter = statusParam as ApplicationStatus | undefined;
   const sortField = sort as "company" | "role" | "appliedDate" | "followUpDate" | undefined;
   const sortOrder = order === "asc" ? "asc" : "desc";
   const searchQuery = search?.trim() || "";
-  const showModal = add === "true";
+  
+  const showAddModal = add === "true";
+  const editId = edit || null;
+
+  // Fetch target application data if we are editing
+  const editingApp = editId 
+    ? await prisma.application.findUnique({ where: { id: editId } }) 
+    : null;
 
   const sortFieldMap: Record<string, string> = {
     company: "company",
@@ -46,7 +54,6 @@ export default async function DashboardPage({ searchParams }: Props) {
     return `/dashboard?${params.toString()}`;
   };
 
-  // Clean Modal Close Route generator
   const getCancelUrl = () => {
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
@@ -57,41 +64,52 @@ export default async function DashboardPage({ searchParams }: Props) {
     return str ? `/dashboard?${str}` : "/dashboard";
   };
 
-  // Modern Server Action to handle inline database insertion
+  // Server Action: Handle Creation
   async function handleCreateApplication(formData: FormData) {
     "use server";
-    
     const company = formData.get("company") as string;
     const role = formData.get("role") as string;
-    const status = formData.get("status") as string;
-    const location = formData.get("location") as string;
-    const salaryRange = formData.get("salaryRange") as string;
-    const jobUrl = formData.get("jobUrl") as string;
-    const notes = formData.get("notes") as string;
-    const source = formData.get("source") as string;
-
-    const appliedDateStr = formData.get("appliedDate") as string;
-    const followUpDateStr = formData.get("followUpDate") as string;
-    const decisionDateStr = formData.get("decisionDate") as string;
-
     if (!company || !role) return;
 
     await prisma.application.create({
       data: {
         company,
         role,
-        status,
-        location: location || null,
-        salaryRange: salaryRange || null,
-        jobUrl: jobUrl || null,
-        notes: notes || null,
-        source: source || null,
-        appliedDate: appliedDateStr ? new Date(appliedDateStr) : new Date(),
-        followUpDate: followUpDateStr ? new Date(followUpDateStr) : null,
-        decisionDate: decisionDateStr ? new Date(decisionDateStr) : null,
+        status: formData.get("status") as string,
+        location: (formData.get("location") as string) || null,
+        salaryRange: (formData.get("salaryRange") as string) || null,
+        jobUrl: (formData.get("jobUrl") as string) || null,
+        notes: (formData.get("notes") as string) || null,
+        appliedDate: formData.get("appliedDate") ? new Date(formData.get("appliedDate") as string) : new Date(),
+        followUpDate: formData.get("followUpDate") ? new Date(formData.get("followUpDate") as string) : null,
       },
     });
+    revalidatePath("/dashboard");
+    redirect("/dashboard");
+  }
 
+  // Server Action: Handle Update Changes
+  async function handleUpdateApplication(formData: FormData) {
+    "use server";
+    const id = formData.get("id") as string;
+    const company = formData.get("company") as string;
+    const role = formData.get("role") as string;
+    if (!id || !company || !role) return;
+
+    await prisma.application.update({
+      where: { id },
+      data: {
+        company,
+        role,
+        status: formData.get("status") as string,
+        location: (formData.get("location") as string) || null,
+        salaryRange: (formData.get("salaryRange") as string) || null,
+        jobUrl: (formData.get("jobUrl") as string) || null,
+        notes: (formData.get("notes") as string) || null,
+        appliedDate: formData.get("appliedDate") ? new Date(formData.get("appliedDate") as string) : new Date(),
+        followUpDate: formData.get("followUpDate") ? new Date(formData.get("followUpDate") as string) : null,
+      },
+    });
     revalidatePath("/dashboard");
     redirect("/dashboard");
   }
@@ -118,7 +136,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   });
 
   return (
-    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "2rem 2.5rem" }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 2.5rem" }}>
       
       <style>{`
         .search-container-input {
@@ -175,7 +193,6 @@ export default async function DashboardPage({ searchParams }: Props) {
           </p>
         </div>
         
-        {/* Swapped Link target to append add=true instead of directing out of page context */}
         <Link
           href={`/dashboard?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(statusFilter ? { status: statusFilter } : {})), add: "true" }).toString()}`}
           style={{
@@ -213,7 +230,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         </form>
       </div>
 
-      {/* Main Framework Layout Grid Table View */}
+      {/* Main Table Grid View */}
       <div style={{ background: "rgba(20, 15, 35, 0.6)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, overflow: "hidden" }}>
         {applications.length === 0 ? (
           <div style={{ textAlign: "center", padding: "5rem 2rem", color: "rgba(255, 255, 255, 0.35)" }}>
@@ -230,7 +247,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                   { key: "status", label: "Status", sortable: false, width: "20%" },
                   { key: "appliedDate", label: "Applied", sortable: true, width: "15%" },
                   { key: "followUpDate", label: "Follow-up", sortable: true, width: "15%" },
-                  { key: "", label: "", sortable: false, width: "50px" },
+                  { key: "", label: "", sortable: false, width: "80px" },
                 ].map((col) => (
                   <th key={col.key} style={{ padding: "1rem", color: "rgba(255, 255, 255, 0.45)", fontWeight: 600, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.04em", width: col.width }}>
                     {col.sortable ? (
@@ -245,7 +262,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             </thead>
             <tbody>
               {applications.map((app) => (
-                <ApplicationRow key={app.id} app={app} />
+                <ApplicationRow key={app.id} app={app} currentFilters={Object.fromEntries(new URLSearchParams(statusFilter ? { status: statusFilter } : {}))} />
               ))}
             </tbody>
           </table>
@@ -253,9 +270,9 @@ export default async function DashboardPage({ searchParams }: Props) {
       </div>
 
       {/* ========================================================= */}
-      {/* GLASSMORPHIC SLIDE-OVER ADD MODAL ELEMENT CONTAINER        */}
+      {/* GLASSMORPHIC INTERACTIVE OVERLAY MODAL FOR ADD / EDIT      */}
       {/* ========================================================= */}
-      {showModal && (
+      {(showAddModal || editingApp) && (
         <div 
           style={{
             position: "fixed",
@@ -276,7 +293,7 @@ export default async function DashboardPage({ searchParams }: Props) {
               borderRadius: 16,
               width: "100%",
               maxWidth: "640px",
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 58, 237, 0.05)",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)",
               padding: "2rem",
               boxSizing: "border-box"
             }}
@@ -284,23 +301,29 @@ export default async function DashboardPage({ searchParams }: Props) {
             {/* Modal Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
               <div>
-                <h3 style={{ fontSize: "1.3rem", fontWeight: 700, margin: 0, color: "#fff" }}>Track New Application</h3>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.82rem", margin: "4px 0 0 0" }}>Log system keywords to profile custom tracks.</p>
+                <h3 style={{ fontSize: "1.3rem", fontWeight: 700, margin: 0, color: "#fff" }}>
+                  {editingApp ? "Edit Application Context" : "Track New Application"}
+                </h3>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.82rem", margin: "4px 0 0 0" }}>
+                  {editingApp ? "Modify tracking values or metrics parameters." : "Log system keywords to profile custom tracks."}
+                </p>
               </div>
               <Link href={getCancelUrl()} style={{ textDecoration: "none", color: "rgba(255,255,255,0.3)", fontSize: "1.2rem" }}>✕</Link>
             </div>
 
-            <form action={handleCreateApplication} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <form action={editingApp ? handleUpdateApplication : handleCreateApplication} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* If editing, carry hidden record primary ID token */}
+              {editingApp && <input type="hidden" name="id" value={editingApp.id} />}
               
               {/* Row 1: Company + Role */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={modalLabelStyle}>Company *</label>
-                  <input type="text" name="company" required placeholder="Acme Corp" className="modal-input" />
+                  <input type="text" name="company" required defaultValue={editingApp?.company || ""} placeholder="Acme Corp" className="modal-input" />
                 </div>
                 <div>
                   <label style={modalLabelStyle}>Role *</label>
-                  <input type="text" name="role" required placeholder="Software Engineer" className="modal-input" />
+                  <input type="text" name="role" required defaultValue={editingApp?.role || ""} placeholder="Software Engineer" className="modal-input" />
                 </div>
               </div>
 
@@ -308,7 +331,7 @@ export default async function DashboardPage({ searchParams }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={modalLabelStyle}>Status</label>
-                  <select name="status" className="modal-input" defaultValue="APPLIED">
+                  <select name="status" className="modal-input" defaultValue={editingApp?.status || "APPLIED"}>
                     {Object.entries(STATUS_LABELS).map(([key, label]) => (
                       <option key={key} value={key} style={{ background: "#141021" }}>{label}</option>
                     ))}
@@ -316,7 +339,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                 </div>
                 <div>
                   <label style={modalLabelStyle}>Location</label>
-                  <input type="text" name="location" placeholder="Remote / NYC" className="modal-input" />
+                  <input type="text" name="location" defaultValue={editingApp?.location || ""} placeholder="Remote / NYC" className="modal-input" />
                 </div>
               </div>
 
@@ -324,11 +347,21 @@ export default async function DashboardPage({ searchParams }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={modalLabelStyle}>Applied Date</label>
-                  <input type="date" name="appliedDate" defaultValue={new Date().toISOString().split('T')[0]} className="modal-input" />
+                  <input 
+                    type="date" 
+                    name="appliedDate" 
+                    defaultValue={editingApp ? new Date(editingApp.appliedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]} 
+                    className="modal-input" 
+                  />
                 </div>
                 <div>
                   <label style={modalLabelStyle}>Follow-Up Reminder</label>
-                  <input type="date" name="followUpDate" className="modal-input" />
+                  <input 
+                    type="date" 
+                    name="followUpDate" 
+                    defaultValue={editingApp?.followUpDate ? new Date(editingApp.followUpDate).toISOString().split('T')[0] : ""} 
+                    className="modal-input" 
+                  />
                 </div>
               </div>
 
@@ -336,11 +369,11 @@ export default async function DashboardPage({ searchParams }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={modalLabelStyle}>Salary Range</label>
-                  <input type="text" name="salaryRange" placeholder="e.g. $120k–$150k" className="modal-input" />
+                  <input type="text" name="salaryRange" defaultValue={editingApp?.salaryRange || ""} placeholder="e.g. $120k–$150k" className="modal-input" />
                 </div>
                 <div>
                   <label style={modalLabelStyle}>Job URL</label>
-                  <input type="url" name="jobUrl" placeholder="https://..." className="modal-input" />
+                  <input type="url" name="jobUrl" defaultValue={editingApp?.jobUrl || ""} placeholder="https://..." className="modal-input" />
                 </div>
               </div>
 
@@ -350,62 +383,34 @@ export default async function DashboardPage({ searchParams }: Props) {
                 <textarea 
                   name="notes" 
                   rows={3} 
+                  defaultValue={editingApp?.notes || ""}
                   placeholder="Recruiter context, referral tracking or tech parameters..." 
                   className="modal-input" 
                   style={{ resize: "none", fontFamily: "inherit" }}
                 />
               </div>
 
-              {/* Form Action Controls */}
+              {/* Controls */}
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
-                <Link 
-                  href={getCancelUrl()} 
-                  style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    color: "rgba(255,255,255,0.7)",
-                    padding: "0.6rem 1.25rem",
-                    borderRadius: 8,
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                    textDecoration: "none"
-                  }}
-                >
-                  Cancel
-                </Link>
-                <button
-                  type="submit"
-                  style={{
-                    background: "#7c3aed",
-                    border: "none",
-                    color: "#fff",
-                    padding: "0.6rem 1.5rem",
-                    borderRadius: 8,
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    boxShadow: "0 4px 12px rgba(124, 58, 237, 0.2)"
-                  }}
-                >
-                  Save Application
+                <Link href={getCancelUrl()} style={cancelBtnStyle}>Cancel</Link>
+                <button type="submit" style={saveBtnStyle}>
+                  {editingApp ? "Save Changes" : "Save Application"}
                 </button>
               </div>
-
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
 const modalLabelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "0.7rem",
-  fontWeight: 600,
-  color: "rgba(255, 255, 255, 0.4)",
-  marginBottom: "0.35rem",
-  textTransform: "uppercase",
-  letterSpacing: "0.03em"
+  display: "block", fontSize: "0.7rem", fontWeight: 600, color: "rgba(255, 255, 255, 0.4)", marginBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.03em"
+};
+const cancelBtnStyle: React.CSSProperties = {
+  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", padding: "0.6rem 1.25rem", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600, textDecoration: "none"
+};
+const saveBtnStyle: React.CSSProperties = {
+  background: "#7c3aed", border: "none", color: "#fff", padding: "0.6rem 1.5rem", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 12px rgba(124, 58, 237, 0.2)"
 };
