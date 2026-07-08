@@ -1,58 +1,65 @@
 // src/app/statistical-analysis/StatsCards.tsx
 
-
 type Props = {
-  total: number;
-  responseRate: number | null;
-  decisionRate: number | null;
-  topSource: string | null;
+  totalApps: number;
+  responseRate: number;
+  appliedCount: number;
+  responseCount: number;
+  interviewRate: number;
+  interviewCount: number;
+  offerRate: number;
+  offerCount: number;
+  avgDaysToResponse: number;
+  trackedDatesCount: number;
 };
 
-const cardStyle = {
-  background: "var(--surface)",
-  border: "1px solid var(--border)",
-  borderRadius: 8,
-  padding: "1rem 1.25rem",
-  flex: "1 1 180px",
-};
-
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
+export default function StatsCards({
+  totalApps,
+  responseRate,
+  appliedCount,
+  responseCount,
+  interviewRate,
+  interviewCount,
+  offerRate,
+  offerCount,
+  avgDaysToResponse,
+  trackedDatesCount,
+}: Props) {
   return (
-    <div style={cardStyle}>
-      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-        {label}
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      {/* Total Applications */}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Applications</div>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text)", marginTop: "0.5rem" }}>{totalApps}</div>
       </div>
-      <div style={{ fontSize: "1.75rem", fontWeight: 700 }}>{value}</div>
-      {sub && (
-        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 4 }}>{sub}</div>
-      )}
-    </div>
-  );
-}
 
-export default function StatsCards({ total, responseRate, decisionRate, topSource }: Props) {
-  return (
-    <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-      <Stat
-        label="Total Applications"
-        value={String(total)}
-        sub={total === 1 ? "1 application tracked" : `${total} applications tracked`}
-      />
-      <Stat
-        label="Response Rate"
-        value={responseRate !== null ? `${responseRate}%` : "—"}
-        sub={responseRate !== null ? "got any response" : "no data yet"}
-      />
-      <Stat
-        label="Decision Rate"
-        value={decisionRate !== null ? `${decisionRate}%` : "—"}
-        sub={decisionRate !== null ? "reached a final outcome" : "no decisions yet"}
-      />
-      <Stat
-        label="Top Source"
-        value={topSource ?? "—"}
-        sub={topSource ? "most applications from" : "add source to applications"}
-      />
+      {/* Response Rate */}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Response Rate</div>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#60a5fa", marginTop: "0.5rem" }}>{responseRate}%</div>
+        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>{responseCount} of {appliedCount} responded</div>
+      </div>
+
+      {/* Interview Rate */}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Interview Rate</div>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#f59e0b", marginTop: "0.5rem" }}>{interviewRate}%</div>
+        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>{interviewCount} interviews</div>
+      </div>
+
+      {/* Offer Rate */}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Offer Rate</div>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#34d399", marginTop: "0.5rem" }}>{offerRate}%</div>
+        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>{offerCount} offers</div>
+      </div>
+
+      {/* Avg Days to Response */}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
+        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Avg Days to Response</div>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#a78bfa", marginTop: "0.5rem" }}>{avgDaysToResponse || "—"}</div>
+        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>{trackedDatesCount} tracked</div>
+      </div>
     </div>
   );
 }
