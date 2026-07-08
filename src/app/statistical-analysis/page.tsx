@@ -42,10 +42,10 @@ export default async function StatisticalAnalysisPage() {
     : 0;
 
   return (
-    /* UPDATED: Aligned maxWidth and padding constraints with the main dashboard layout expansion */
-    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "2rem" }}>
-      <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Statistical Analysis</h1>
-      <p style={{ color: "var(--text-muted)", marginTop: 4, marginBottom: "2rem" }}>
+    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "1.5rem 2rem" }}>
+      <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Statistical Analysis</h1>
+      {/* Reduced bottom margin below description text */}
+      <p style={{ color: "var(--text-muted)", marginTop: 4, marginBottom: "1.25rem", fontSize: "0.9rem" }}>
         How your applications are tracking, decided vs still in progress.
       </p>
 
@@ -62,12 +62,17 @@ export default async function StatisticalAnalysisPage() {
         trackedDatesCount={appsWithDates.length}
       />
 
+      {/* Compact layout styling for the Funnel Box container */}
       <div
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
           borderRadius: 8,
-          padding: "1.5rem",
+          padding: "1rem 1.25rem",
+          maxHeight: "380px", 
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
         }}
       >
         <FunnelChart counts={{ total, undecided, decided, offer, rejected, withdrawn, undecidedBreakdown: { wishlist, applied: appliedCount, phoneScreen, interview } }} />

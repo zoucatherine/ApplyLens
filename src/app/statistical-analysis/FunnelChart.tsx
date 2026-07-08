@@ -21,11 +21,15 @@ type Counts = {
 };
 
 const NODE_W = 14;
-const X_SOURCE = 20;
-const X_LEVEL1 = 380;
-const X_LEVEL2 = 660;
-const CHART_W = 720;
-const CHART_H = 320;
+
+// Widescreen Chart Scaling Constraints
+const CHART_W = 960; // Expanded to take advantage of container expansion
+const CHART_H = 300; // Trimmed down slightly to reduce vertical space
+
+// Evenly distributed columns across the wider grid canvas
+const X_SOURCE = 30;
+const X_LEVEL1 = 400;
+const X_LEVEL2 = 780; 
 
 function scaleHeight(count: number, total: number, max: number, min: number) {
   if (total === 0) return min;
@@ -63,8 +67,8 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
   const sourceYMid = sourceY + sourceH / 2;
 
   const GAP_1 = 16;
-  const undecidedH = scaleHeight(undecided, total, 140, 10);
-  const decidedH = scaleHeight(decided, total, 140, 10);
+  const undecidedH = scaleHeight(undecided, total, 130, 12);
+  const decidedH = scaleHeight(decided, total, 130, 12);
   const level1TotalH = undecidedH + decidedH + GAP_1;
   const level1Y = CHART_H / 2 - level1TotalH / 2;
 
@@ -73,9 +77,9 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
 
   const decidedTotal = offer + rejected + withdrawn || 1;
   const GAP_2 = 14;
-  const offerH = scaleHeight(offer, decidedTotal, 90, 8);
-  const rejectedH = scaleHeight(rejected, decidedTotal, 90, 8);
-  const withdrawnH = scaleHeight(withdrawn, decidedTotal, 90, 8);
+  const offerH = scaleHeight(offer, decidedTotal, 80, 10);
+  const rejectedH = scaleHeight(rejected, decidedTotal, 80, 10);
+  const withdrawnH = scaleHeight(withdrawn, decidedTotal, 80, 10);
   const level2TotalH = offerH + rejectedH + withdrawnH + GAP_2 * 2;
   const level2Y = CHART_H / 2 - level2TotalH / 2;
 
@@ -84,18 +88,20 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
   const withdrawnY = rejectedY + rejectedH + GAP_2;
 
   return (
-    <div ref={containerRef} style={{ position: "relative" }}>
+    <div ref={containerRef} style={{ position: "relative", width: "100%", height: "100%" }}>
       <svg
         viewBox={`0 0 ${CHART_W} ${CHART_H}`}
         width="100%"
+        height="100%"
+        style={{ display: "block", overflow: "visible" }}
         role="img"
         aria-label={`Application funnel: ${total} total, ${undecided} undecided, ${decided} decided (${offer} offer, ${rejected} rejected, ${withdrawn} withdrawn)`}
       >
         <rect x={X_SOURCE} y={sourceY} width={NODE_W} height={sourceH} rx="4" style={{ fill: "var(--text-muted)" }} />
-        <text x={X_SOURCE + NODE_W + 10} y={sourceYMid - 6} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+        <text x={X_SOURCE + NODE_W + 10} y={sourceYMid - 5} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
           Applications
         </text>
-        <text x={X_SOURCE + NODE_W + 10} y={sourceYMid + 12} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+        <text x={X_SOURCE + NODE_W + 10} y={sourceYMid + 13} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
           {total} total
         </text>
 
@@ -104,7 +110,7 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
           d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, undecidedY, undecidedY + undecidedH)}
           style={{
             fill: "var(--text-muted)",
-            fillOpacity: tooltip ? 0.4 : 0.25,
+            fillOpacity: tooltip ? 0.35 : 0.2,
             cursor: "pointer",
             transition: "fill-opacity 0.15s",
           }}
@@ -122,7 +128,7 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
         {/* Flow: Applications -> Decided */}
         <path
           d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, decidedY, decidedY + decidedH)}
-          style={{ fill: "var(--text-muted)", fillOpacity: 0.15 }}
+          style={{ fill: "var(--text-muted)", fillOpacity: 0.12 }}
         />
         <rect x={X_LEVEL1} y={decidedY} width={NODE_W} height={decidedH} rx="4" style={{ fill: "var(--text-muted)" }} />
         <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
@@ -132,9 +138,10 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
           {decided}
         </text>
 
+        {/* Flow: Decided -> Offer */}
         <path
           d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, offerY, offerY + offerH)}
-          style={{ fill: "#22c55e", fillOpacity: 0.18 }}
+          style={{ fill: "#22c55e", fillOpacity: 0.15 }}
         />
         <rect x={X_LEVEL2} y={offerY} width={NODE_W} height={offerH} rx="4" style={{ fill: "#22c55e" }} />
         <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
@@ -144,9 +151,10 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
           {offer}
         </text>
 
+        {/* Flow: Decided -> Rejected */}
         <path
           d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, rejectedY, rejectedY + rejectedH)}
-          style={{ fill: "var(--danger)", fillOpacity: 0.18 }}
+          style={{ fill: "var(--danger)", fillOpacity: 0.15 }}
         />
         <rect x={X_LEVEL2} y={rejectedY} width={NODE_W} height={rejectedH} rx="4" style={{ fill: "var(--danger)" }} />
         <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
@@ -156,9 +164,10 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
           {rejected}
         </text>
 
+        {/* Flow: Decided -> Withdrawn */}
         <path
           d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, withdrawnY, withdrawnY + withdrawnH)}
-          style={{ fill: "var(--text-muted)", fillOpacity: 0.18 }}
+          style={{ fill: "var(--text-muted)", fillOpacity: 0.15 }}
         />
         <rect x={X_LEVEL2} y={withdrawnY} width={NODE_W} height={withdrawnH} rx="4" style={{ fill: "var(--text-muted)" }} />
         <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
