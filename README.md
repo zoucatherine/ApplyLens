@@ -1,6 +1,6 @@
-# Job Application Tracker
+# ApplyLens
 
-Track your job applications, statuses, and follow-up reminders.
+Track every application, follow-up, and outcome in one place. Stop losing track of where you applied and start understanding what's actually working.
 
 ## Stack
 - **Next.js 14** (App Router)
@@ -54,14 +54,6 @@ src/
 prisma/
   schema.prisma             ← Database schema
 ```
-
-## What to build next
-1. ~~Input validation~~
-2. ~~Kanban board view (drag cards between status columns)~~
-3. ~~Improve Database Schema~~
-4. ~~Add filtering (ex: show only interviews, only offers, sort by application date, etc.)~~
-5. Dashboard metrics
-6. Auth with Clerk or NextAuth (make it multi-user)
 7. Charts
 8. ML/NLP feature
 9. Follow-up reminder emails via Resend (cron job)
