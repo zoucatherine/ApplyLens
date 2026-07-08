@@ -263,7 +263,16 @@ export default async function DashboardPage({ searchParams }: Props) {
             </thead>
             <tbody>
               {applications.map((app) => (
-                <ApplicationRow key={app.id} app={app} currentFilters={Object.fromEntries(new URLSearchParams(statusFilter ? { status: statusFilter } : {}))} />
+                <ApplicationRow 
+                  key={`${app.id}-${editId}`} // <-- Changing the key forces a partial row state recalculation when editId shifts
+                  app={app} 
+                  currentFilters={{
+                    status: statusParam || "",
+                    search: search || "",
+                    sort: sort || "",
+                    order: order || "",
+                  }} 
+                />
               ))}
             </tbody>
           </table>
@@ -271,10 +280,11 @@ export default async function DashboardPage({ searchParams }: Props) {
       </div>
 
       {/* ========================================================= */}
-      {/* GLASSMORPHIC INTERACTIVE OVERLAY MODAL FOR ADD / EDIT      */}
+      {/* GLASSMORPHIC INTERACTIVE OVERLAY MODAL WITH ANIMATION      */}
       {/* ========================================================= */}
       {(showAddModal || editingApp) && (
         <div 
+          className="modal-backdrop"
           style={{
             position: "fixed",
             inset: 0,
@@ -288,13 +298,14 @@ export default async function DashboardPage({ searchParams }: Props) {
           }}
         >
           <div 
+            className="modal-panel"
             style={{
               background: "rgba(20, 16, 33, 0.95)",
               border: "1px solid rgba(255, 255, 255, 0.08)",
               borderRadius: 16,
               width: "100%",
               maxWidth: "640px",
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 58, 237, 0.05)",
               padding: "2rem",
               boxSizing: "border-box"
             }}
@@ -313,7 +324,6 @@ export default async function DashboardPage({ searchParams }: Props) {
             </div>
 
             <form action={editingApp ? handleUpdateApplication : handleCreateApplication} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {/* If editing, carry hidden record primary ID token */}
               {editingApp && <input type="hidden" name="id" value={editingApp.id} />}
               
               {/* Row 1: Company + Role */}
@@ -370,7 +380,7 @@ export default async function DashboardPage({ searchParams }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={modalLabelStyle}>Salary Range</label>
-                  <input type="text" name="salary" defaultValue={editingApp?.salary || ""} placeholder="e.g. $120k–$150k" className="modal-input" />
+                  <input type="text" name="salaryRange" defaultValue={editingApp?.salaryRange || ""} placeholder="e.g. $120k–$150k" className="modal-input" />
                 </div>
                 <div>
                   <label style={modalLabelStyle}>Job URL</label>
@@ -378,7 +388,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                 </div>
               </div>
 
-              {/* Row 5: Notes Textarea */}
+              {/* Row 5: Notes */}
               <div>
                 <label style={modalLabelStyle}>Notes</label>
                 <textarea 

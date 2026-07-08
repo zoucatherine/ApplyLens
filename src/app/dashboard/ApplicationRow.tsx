@@ -18,6 +18,8 @@ type Props = {
   currentFilters: Record<string, string>;
 };
 
+
+
 export default function ApplicationRow({ app, currentFilters }: Props) {
   const router = useRouter();
   
@@ -43,7 +45,14 @@ export default function ApplicationRow({ app, currentFilters }: Props) {
   const editUrl = `/dashboard?${new URLSearchParams({ ...currentFilters, edit: app.id }).toString()}`;
 
   const handleRowClick = () => {
+    // Force a strict soft-navigation refresh state change
     router.push(editUrl);
+    
+    // If Next.js micro-task routing gets caught in an edge-case cache, 
+    // router.refresh() forces the surrounding Server Component page to pull fresh database status parameters
+    setTimeout(() => {
+      router.refresh();
+    }, 50);
   };
 
   return (
