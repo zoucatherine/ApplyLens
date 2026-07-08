@@ -77,7 +77,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         role,
         status: formData.get("status") as string,
         location: (formData.get("location") as string) || null,
-        salaryRange: (formData.get("salaryRange") as string) || null,
+        salary: (formData.get("salaryRange") as string) || null,
         jobUrl: (formData.get("jobUrl") as string) || null,
         notes: (formData.get("notes") as string) || null,
         appliedDate: formData.get("appliedDate") ? new Date(formData.get("appliedDate") as string) : new Date(),
@@ -103,7 +103,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         role,
         status: formData.get("status") as string,
         location: (formData.get("location") as string) || null,
-        salaryRange: (formData.get("salaryRange") as string) || null,
+        salary: (formData.get("salaryRange") as string) || null,
         jobUrl: (formData.get("jobUrl") as string) || null,
         notes: (formData.get("notes") as string) || null,
         appliedDate: formData.get("appliedDate") ? new Date(formData.get("appliedDate") as string) : new Date(),
@@ -380,7 +380,7 @@ export default async function DashboardPage({ searchParams }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={modalLabelStyle}>Salary Range</label>
-                  <input type="text" name="salaryRange" defaultValue={editingApp?.salaryRange || ""} placeholder="e.g. $120k–$150k" className="modal-input" />
+                  <input type="text" name="salary" defaultValue={editingApp?.salary || ""} placeholder="e.g. $120k–$150k" className="modal-input" />
                 </div>
                 <div>
                   <label style={modalLabelStyle}>Job URL</label>
