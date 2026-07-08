@@ -54,7 +54,3 @@ src/
 prisma/
   schema.prisma             ← Database schema
 ```
-7. Charts
-8. ML/NLP feature
-9. Follow-up reminder emails via Resend (cron job)
-11. Deploy to Vercel
