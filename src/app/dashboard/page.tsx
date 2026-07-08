@@ -78,8 +78,8 @@ export default async function DashboardPage({ searchParams }: Props) {
   );
 
   return (
-    /* UPDATED: Increased maxWidth to 1400 and added extra padding side space */
-    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "calc(56px + 2rem) 2rem 2rem" }}>
+    /* FIXED: Changed padding to match the Statistics component top layout rules exactly */
+    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "1.5rem 2rem" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>
@@ -125,7 +125,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             value={searchQuery}
             placeholder="Search company, role, notes, location..."
             className="search-input"
-            style={{ width: "100%" }} /* Ensure input stretches beautifully */
+            style={{ width: "100%" }}
           />
           {searchQuery && (
             <a

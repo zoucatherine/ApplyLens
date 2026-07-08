@@ -43,7 +43,7 @@ export default async function StatisticalAnalysisPage() {
 
   return (
     <div style={{ maxWidth: 2000, margin: "0 auto", padding: "1.5rem 2rem" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Statistics</h1>
+      <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Statistics</h1>
       {/* Reduced bottom margin below description text */}
       <p style={{ color: "var(--text-muted)", marginTop: 4, marginBottom: "1.25rem", fontSize: "0.9rem" }}>
         How your applications are tracking, decided vs still in progress.
