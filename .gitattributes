@@ -1,0 +1,12 @@
+# Ignore build and distribution folders from language stats
+dist/* linguist-vendored
+build/* linguist-vendored
+.next/* linguist-vendored
+
+# Ignore lockfiles completely
+package-lock.json linguist-generated
+yarn.lock linguist-generated
+
+# If you want to hide CSS/HTML to let your logic shine through:
+*.css linguist-documentation
+*.html linguist-documentation
