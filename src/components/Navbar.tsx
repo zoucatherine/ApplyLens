@@ -68,6 +68,9 @@ export default function Sidebar() {
     </nav>
   );
 
+  // Check if the current route is the profile page to highlight it if active
+  const isProfileActive = pathname === "/profile";
+
   const sidebarInner = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "1.25rem 0.85rem" }}>
       {/* Brand */}
@@ -93,8 +96,9 @@ export default function Sidebar() {
       {/* Nav links */}
       {links}
 
-      {/* Bottom: profile */}
-      <div
+      {/* Bottom: Interactive Profile Link */}
+      <TransitionLink
+        href="/profile"
         style={{
           marginTop: "auto",
           paddingTop: "1rem",
@@ -104,12 +108,16 @@ export default function Sidebar() {
           gap: "0.65rem",
           padding: "0.65rem 0.5rem",
           borderRadius: 8,
-          cursor: "pointer",
+          textDecoration: "none",
+          background: isProfileActive ? "rgba(124,58,237,0.25)" : "transparent",
           transition: "background 0.15s ease",
         }}
-        title="Profile (coming soon)"
-        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+        onMouseEnter={(e) => { 
+          if (!isProfileActive) e.currentTarget.style.background = "rgba(255,255,255,0.06)"; 
+        }}
+        onMouseLeave={(e) => { 
+          if (!isProfileActive) e.currentTarget.style.background = "transparent"; 
+        }}
       >
         <div
           style={{
@@ -130,9 +138,11 @@ export default function Sidebar() {
         </div>
         <div>
           <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#fff" }}>Profile</div>
-          <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>Coming soon</div>
+          <div style={{ fontSize: "0.7rem", color: isProfileActive ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.4)" }}>
+            {isProfileActive ? "View settings" : "Manage account"}
+          </div>
         </div>
-      </div>
+      </TransitionLink>
     </div>
   );
 
@@ -149,7 +159,7 @@ export default function Sidebar() {
           zIndex: 50,
           display: "flex",
           flexDirection: "column",
-          viewTransitionName: "main-sidebar", // FIXED: Prevents desktop view transition flash
+          viewTransitionName: "main-sidebar",
         }} 
         className="sidebar-desktop sidebar-container"
       >
@@ -229,7 +239,7 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Mobile drawer (slides in from left) */}
+      {/* Mobile drawer */}
       <div
         ref={sidebarRef}
         style={{
@@ -241,7 +251,7 @@ export default function Sidebar() {
           zIndex: 49,
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s ease",
-          viewTransitionName: "main-sidebar", // FIXED: Prevents mobile view transition slide/fade anomaly
+          viewTransitionName: "main-sidebar",
         }}
         className="sidebar-mobile-drawer sidebar-container"
       >
@@ -249,13 +259,11 @@ export default function Sidebar() {
       </div>
 
       <style>{`
-        /* Desktop Defaults (Screens wider than 768px) */
         .sidebar-desktop        { display: flex !important; }
         .sidebar-mobile-bar     { display: none !important; }
         .sidebar-mobile-drawer  { display: none !important; }
         .sidebar-mobile-overlay { display: none !important; }
 
-        /* Mobile Adjustments (Screens 768px and narrower) */
         @media (max-width: 768px) {
           .sidebar-desktop        { display: none !important; }
           .sidebar-mobile-bar     { display: flex !important; }
