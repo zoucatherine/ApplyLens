@@ -1,9 +1,11 @@
 // src/app/dashboard/page.tsx
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { ApplicationStatus, STATUS_LABELS } from "@/types";
 import ApplicationRow from "./ApplicationRow";
-import StatusDropdown from "./StatusDropdown"; // <-- Import your new component here!
+import StatusDropdown from "./StatusDropdown";
 
 type Props = {
   searchParams: Promise<{
@@ -11,15 +13,17 @@ type Props = {
     sort?: string;
     order?: string;
     search?: string;
+    add?: string; // Query param to trigger modal state
   }>;
 };
 
 export default async function DashboardPage({ searchParams }: Props) {
-  const { status: statusParam, sort, order, search } = await searchParams;
+  const { status: statusParam, sort, order, search, add } = await searchParams;
   const statusFilter = statusParam as ApplicationStatus | undefined;
   const sortField = sort as "company" | "role" | "appliedDate" | "followUpDate" | undefined;
   const sortOrder = order === "asc" ? "asc" : "desc";
   const searchQuery = search?.trim() || "";
+  const showModal = add === "true";
 
   const sortFieldMap: Record<string, string> = {
     company: "company",
@@ -41,6 +45,56 @@ export default async function DashboardPage({ searchParams }: Props) {
     }
     return `/dashboard?${params.toString()}`;
   };
+
+  // Clean Modal Close Route generator
+  const getCancelUrl = () => {
+    const params = new URLSearchParams();
+    if (statusFilter) params.set("status", statusFilter);
+    if (searchQuery) params.set("search", searchQuery);
+    if (sort) params.set("sort", sort);
+    if (order) params.set("order", order);
+    const str = params.toString();
+    return str ? `/dashboard?${str}` : "/dashboard";
+  };
+
+  // Modern Server Action to handle inline database insertion
+  async function handleCreateApplication(formData: FormData) {
+    "use server";
+    
+    const company = formData.get("company") as string;
+    const role = formData.get("role") as string;
+    const status = formData.get("status") as string;
+    const location = formData.get("location") as string;
+    const salaryRange = formData.get("salaryRange") as string;
+    const jobUrl = formData.get("jobUrl") as string;
+    const notes = formData.get("notes") as string;
+    const source = formData.get("source") as string;
+
+    const appliedDateStr = formData.get("appliedDate") as string;
+    const followUpDateStr = formData.get("followUpDate") as string;
+    const decisionDateStr = formData.get("decisionDate") as string;
+
+    if (!company || !role) return;
+
+    await prisma.application.create({
+      data: {
+        company,
+        role,
+        status,
+        location: location || null,
+        salaryRange: salaryRange || null,
+        jobUrl: jobUrl || null,
+        notes: notes || null,
+        source: source || null,
+        appliedDate: appliedDateStr ? new Date(appliedDateStr) : new Date(),
+        followUpDate: followUpDateStr ? new Date(followUpDateStr) : null,
+        decisionDate: decisionDateStr ? new Date(decisionDateStr) : null,
+      },
+    });
+
+    revalidatePath("/dashboard");
+    redirect("/dashboard");
+  }
 
   const where = {
     ...(statusFilter ? { status: statusFilter } : {}),
@@ -64,113 +118,294 @@ export default async function DashboardPage({ searchParams }: Props) {
   });
 
   return (
-    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "1.5rem 2rem" }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "2rem 2.5rem" }}>
+      
+      <style>{`
+        .search-container-input {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          padding: 0.6rem 0.75rem 0.6rem 2.2rem;
+          color: #fff;
+          font-size: 0.875rem;
+          outline: none;
+          box-sizing: border-box;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .search-container-input:focus {
+          border-color: rgba(124, 58, 237, 0.4);
+          box-shadow: 0 0 12px rgba(124, 58, 237, 0.15);
+        }
+        .th-sort-link {
+          color: inherit;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          transition: color 0.15s ease;
+        }
+        .th-sort-link:hover {
+          color: #fff;
+        }
+        .modal-input {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          padding: 0.6rem 0.75rem;
+          color: #fff;
+          font-size: 0.875rem;
+          outline: none;
+          box-sizing: border-box;
+          transition: border-color 0.15s ease;
+        }
+        .modal-input:focus {
+          border-color: #7c3aed;
+        }
+      `}</style>
+
+      {/* Top Header Row */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Dashboard</h1>
-          <p style={{ color: "var(--text-muted)", marginTop: 4 }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Dashboard</h1>
+          <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "0.875rem", marginTop: 4 }}>
             {statusFilter ? `Showing ${STATUS_LABELS[statusFilter]}` : "All applications"}
             {applications.length > 0 && ` — ${applications.length} result${applications.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         
-        <div>
-          <Link
-            href="/applications/new"
-            style={{
-              background: "var(--accent)",
-              color: "#fff",
-              padding: "0.6rem 1.25rem",
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: "0.9rem",
-            }}
-          >
-            + Add Application
-          </Link>
-        </div>
+        {/* Swapped Link target to append add=true instead of directing out of page context */}
+        <Link
+          href={`/dashboard?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(statusFilter ? { status: statusFilter } : {})), add: "true" }).toString()}`}
+          style={{
+            background: "var(--accent, #7c3aed)",
+            color: "#fff",
+            padding: "0.6rem 1.25rem",
+            borderRadius: 8,
+            fontWeight: 600,
+            fontSize: "0.9rem",
+            textDecoration: "none",
+            boxShadow: "0 4px 12px rgba(124, 58, 237, 0.2)",
+          }}
+        >
+          + Add Application
+        </Link>
       </div>
 
-      {/* Search & Filter Controls */}
-      <div style={{ marginBottom: "2rem" }}>
-        <form style={{ display: "flex", gap: "0.5rem", width: "100%" }} action="/dashboard" method="GET">
+      {/* Control Filters Block */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <form style={{ display: "flex", gap: "0.75rem", width: "100%" }} action="/dashboard" method="GET">
           {sort && <input type="hidden" name="sort" value={sort} />}
           {order && <input type="hidden" name="order" value={order} />}
           
           <div style={{ position: "relative", flex: 1 }}>
+            <i className="ti ti-search" style={{ position: "absolute", left: "0.8rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255, 255, 255, 0.3)", fontSize: "1rem" }} />
             <input
               type="search"
               name="search"
               defaultValue={searchQuery}
               placeholder="Search company, role, notes, location..."
-              className="search-input"
-              style={{ width: "100%" }}
+              className="search-container-input"
             />
-            {searchQuery && (
-              <a
-                href={statusFilter ? `/dashboard?status=${statusFilter}` : "/dashboard"}
-                className="clear-btn"
-                title="Clear search"
-                style={{ right: "12px" }}
-              >
-                ✕
-              </a>
-            )}
           </div>
-
-          {/* Render your interactive client dropdown inside the server framework container */}
           <StatusDropdown defaultValue={statusFilter || ""} />
         </form>
       </div>
 
-      {/* Table */}
-      {applications.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-muted)" }}>
-          <p style={{ fontSize: "1.1rem" }}>
-            {statusFilter ? `No applications with status "${STATUS_LABELS[statusFilter]}"` : "No applications yet."}
-          </p>
-        </div>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border)", textAlign: "left" }}>
-              {[
-                { key: "company", label: "Company", sortable: true },
-                { key: "role", label: "Role", sortable: true },
-                { key: "status", label: "Status", sortable: false },
-                { key: "appliedDate", label: "Applied", sortable: true },
-                { key: "followUpDate", label: "Follow-up", sortable: true },
-                { key: "", label: "", sortable: false },
-              ].map((col) => (
-                <th
-                  key={col.key}
+      {/* Main Framework Layout Grid Table View */}
+      <div style={{ background: "rgba(20, 15, 35, 0.6)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, overflow: "hidden" }}>
+        {applications.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "5rem 2rem", color: "rgba(255, 255, 255, 0.35)" }}>
+            <i className="ti ti-folder-off" style={{ fontSize: "2rem", marginBottom: "0.5rem", display: "block" }} />
+            <p style={{ fontSize: "0.95rem", margin: 0 }}>No entries matching filter view parameters.</p>
+          </div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.06)", textAlign: "left", background: "rgba(255, 255, 255, 0.01)" }}>
+                {[
+                  { key: "company", label: "Company", sortable: true, width: "25%" },
+                  { key: "role", label: "Role", sortable: true, width: "25%" },
+                  { key: "status", label: "Status", sortable: false, width: "20%" },
+                  { key: "appliedDate", label: "Applied", sortable: true, width: "15%" },
+                  { key: "followUpDate", label: "Follow-up", sortable: true, width: "15%" },
+                  { key: "", label: "", sortable: false, width: "50px" },
+                ].map((col) => (
+                  <th key={col.key} style={{ padding: "1rem", color: "rgba(255, 255, 255, 0.45)", fontWeight: 600, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.04em", width: col.width }}>
+                    {col.sortable ? (
+                      <a href={buildSortUrl(col.key)} className="th-sort-link">
+                        {col.label}
+                        {sort === col.key && <span style={{ color: "#7c3aed", fontSize: "0.65rem" }}>{sortOrder === "asc" ? "▲" : "▼"}</span>}
+                      </a>
+                    ) : col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map((app) => (
+                <ApplicationRow key={app.id} app={app} />
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* ========================================================= */}
+      {/* GLASSMORPHIC SLIDE-OVER ADD MODAL ELEMENT CONTAINER        */}
+      {/* ========================================================= */}
+      {showModal && (
+        <div 
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 999,
+            background: "rgba(10, 7, 18, 0.65)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "2rem"
+          }}
+        >
+          <div 
+            style={{
+              background: "rgba(20, 16, 33, 0.95)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              borderRadius: 16,
+              width: "100%",
+              maxWidth: "640px",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 58, 237, 0.05)",
+              padding: "2rem",
+              boxSizing: "border-box"
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
+              <div>
+                <h3 style={{ fontSize: "1.3rem", fontWeight: 700, margin: 0, color: "#fff" }}>Track New Application</h3>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.82rem", margin: "4px 0 0 0" }}>Log system keywords to profile custom tracks.</p>
+              </div>
+              <Link href={getCancelUrl()} style={{ textDecoration: "none", color: "rgba(255,255,255,0.3)", fontSize: "1.2rem" }}>✕</Link>
+            </div>
+
+            <form action={handleCreateApplication} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              
+              {/* Row 1: Company + Role */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={modalLabelStyle}>Company *</label>
+                  <input type="text" name="company" required placeholder="Acme Corp" className="modal-input" />
+                </div>
+                <div>
+                  <label style={modalLabelStyle}>Role *</label>
+                  <input type="text" name="role" required placeholder="Software Engineer" className="modal-input" />
+                </div>
+              </div>
+
+              {/* Row 2: Status + Location */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={modalLabelStyle}>Status</label>
+                  <select name="status" className="modal-input" defaultValue="APPLIED">
+                    {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                      <option key={key} value={key} style={{ background: "#141021" }}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={modalLabelStyle}>Location</label>
+                  <input type="text" name="location" placeholder="Remote / NYC" className="modal-input" />
+                </div>
+              </div>
+
+              {/* Row 3: Applied Date + Follow Up Date */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={modalLabelStyle}>Applied Date</label>
+                  <input type="date" name="appliedDate" defaultValue={new Date().toISOString().split('T')[0]} className="modal-input" />
+                </div>
+                <div>
+                  <label style={modalLabelStyle}>Follow-Up Reminder</label>
+                  <input type="date" name="followUpDate" className="modal-input" />
+                </div>
+              </div>
+
+              {/* Row 4: Salary Range + Job URL */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={modalLabelStyle}>Salary Range</label>
+                  <input type="text" name="salaryRange" placeholder="e.g. $120k–$150k" className="modal-input" />
+                </div>
+                <div>
+                  <label style={modalLabelStyle}>Job URL</label>
+                  <input type="url" name="jobUrl" placeholder="https://..." className="modal-input" />
+                </div>
+              </div>
+
+              {/* Row 5: Notes Textarea */}
+              <div>
+                <label style={modalLabelStyle}>Notes</label>
+                <textarea 
+                  name="notes" 
+                  rows={3} 
+                  placeholder="Recruiter context, referral tracking or tech parameters..." 
+                  className="modal-input" 
+                  style={{ resize: "none", fontFamily: "inherit" }}
+                />
+              </div>
+
+              {/* Form Action Controls */}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <Link 
+                  href={getCancelUrl()} 
                   style={{
-                    padding: "0.8rem 1rem",
-                    color: col.sortable ? "var(--text)" : "var(--text-muted)",
-                    fontWeight: 500,
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    color: "rgba(255,255,255,0.7)",
+                    padding: "0.6rem 1.25rem",
+                    borderRadius: 8,
                     fontSize: "0.85rem",
-                    cursor: col.sortable ? "pointer" : "default",
-                    whiteSpace: "nowrap",
+                    fontWeight: 600,
+                    textDecoration: "none"
                   }}
                 >
-                  {col.sortable ? (
-                    <a href={buildSortUrl(col.key)} style={{ color: "inherit", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
-                      {col.label}
-                      {sort === col.key && <span style={{ fontSize: "0.7rem" }}>{sortOrder === "asc" ? "▲" : "▼"}</span>}
-                    </a>
-                  ) : col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {applications.map((app) => (
-              <ApplicationRow key={app.id} app={app} />
-            ))}
-          </tbody>
-        </table>
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  style={{
+                    background: "#7c3aed",
+                    border: "none",
+                    color: "#fff",
+                    padding: "0.6rem 1.5rem",
+                    borderRadius: 8,
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(124, 58, 237, 0.2)"
+                  }}
+                >
+                  Save Application
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
       )}
+
     </div>
   );
 }
+
+const modalLabelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: "0.7rem",
+  fontWeight: 600,
+  color: "rgba(255, 255, 255, 0.4)",
+  marginBottom: "0.35rem",
+  textTransform: "uppercase",
+  letterSpacing: "0.03em"
+};
