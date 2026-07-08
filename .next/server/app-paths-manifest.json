@@ -1,6 +1,7 @@
 {
-  "/statistical-analysis/page": "app/statistical-analysis/page.js",
   "/page": "app/page.js",
-  "/applications/[id]/edit/page": "app/applications/[id]/edit/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/dashboard/page": "app/dashboard/page.js",
+  "/statistical-analysis/page": "app/statistical-analysis/page.js",
+  "/applications/new/page": "app/applications/new/page.js",
+  "/applications/[id]/edit/page": "app/applications/[id]/edit/page.js"
 }

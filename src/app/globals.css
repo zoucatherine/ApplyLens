@@ -64,3 +64,8 @@ button {
   background: var(--border);
   color: var(--text);
 }
+
+/* src/app/globals.css or your main layout stylesheet */
+.dropdown-item-hover:hover {
+  background-color: rgba(109, 84, 235, 1.0) !important;
+}
