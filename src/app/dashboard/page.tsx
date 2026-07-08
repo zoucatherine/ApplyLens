@@ -79,7 +79,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   return (
     /* UPDATED: Increased maxWidth to 1400 and added extra padding side space */
-    <div style={{ maxWidth: 1400, margin: "0 auto", padding: "calc(56px + 2rem) 2rem 2rem" }}>
+    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "calc(56px + 2rem) 2rem 2rem" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>

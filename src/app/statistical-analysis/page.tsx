@@ -43,7 +43,7 @@ export default async function StatisticalAnalysisPage() {
 
   return (
     /* UPDATED: Aligned maxWidth and padding constraints with the main dashboard layout expansion */
-    <div style={{ maxWidth: 1400, margin: "0 auto", padding: "2rem" }}>
+    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "2rem" }}>
       <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Statistical Analysis</h1>
       <p style={{ color: "var(--text-muted)", marginTop: 4, marginBottom: "2rem" }}>
         How your applications are tracking, decided vs still in progress.
