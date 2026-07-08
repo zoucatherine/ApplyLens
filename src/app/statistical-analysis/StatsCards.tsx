@@ -41,6 +41,16 @@ export default function StatsCards({
           transform: translateY(-2px);
         }
         
+        /* Icon styles with unified opacity fade */
+        .stat-card-icon {
+          font-size: 1.1rem;
+          opacity: 0.65;
+          transition: opacity 0.25s ease;
+        }
+        .stat-card:hover .stat-card-icon {
+          opacity: 1;
+        }
+
         /* Total Apps - White/Purple Glow */
         .card-total:hover {
           border-color: rgba(255, 255, 255, 0.3);
@@ -79,7 +89,10 @@ export default function StatsCards({
         
         {/* Total Applications */}
         <div className="stat-card card-total">
-          <div style={labelStyle}>Total Applications</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={labelStyle}>Total Applications</div>
+            <i className="ti ti-briefcase stat-card-icon" style={{ color: "rgba(255, 255, 255, 0.7)" }} />
+          </div>
           <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#fff", marginTop: "0.25rem" }}>
             {totalApps}
           </div>
@@ -87,7 +100,10 @@ export default function StatsCards({
 
         {/* Response Rate */}
         <div className="stat-card card-response">
-          <div style={labelStyle}>Response Rate</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={labelStyle}>Response Rate</div>
+            <i className="ti ti-message-dots stat-card-icon" style={{ color: "#3b82f6" }} />
+          </div>
           <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#3b82f6", marginTop: "0.25rem" }}>
             {responseRate}%
           </div>
@@ -96,7 +112,10 @@ export default function StatsCards({
 
         {/* Interview Rate */}
         <div className="stat-card card-interview">
-          <div style={labelStyle}>Interview Rate</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={labelStyle}>Interview Rate</div>
+            <i className="ti ti-calendar-event stat-card-icon" style={{ color: "#f59e0b" }} />
+          </div>
           <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#f59e0b", marginTop: "0.25rem" }}>
             {interviewRate}%
           </div>
@@ -105,7 +124,10 @@ export default function StatsCards({
 
         {/* Offer Rate */}
         <div className="stat-card card-offer">
-          <div style={labelStyle}>Offer Rate</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={labelStyle}>Offer Rate</div>
+            <i className="ti ti-award stat-card-icon" style={{ color: "#10b981" }} />
+          </div>
           <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#10b981", marginTop: "0.25rem" }}>
             {offerRate}%
           </div>
@@ -114,7 +136,10 @@ export default function StatsCards({
 
         {/* Avg Days to Response */}
         <div className="stat-card card-avg">
-          <div style={labelStyle}>Avg Days to Response</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={labelStyle}>Avg Days to Response</div>
+            <i className="ti ti-clock-hour-4 stat-card-icon" style={{ color: "#a78bfa" }} />
+          </div>
           <div style={{ fontSize: "1.75rem", fontWeight: 700, color: "#a78bfa", marginTop: "0.25rem" }}>
             {avgDaysToResponse || "—"}
           </div>
@@ -125,7 +150,6 @@ export default function StatsCards({
   );
 }
 
-// Consistent Design Token Objects 
 const labelStyle: React.CSSProperties = {
   fontSize: "0.72rem",
   fontWeight: 600,
