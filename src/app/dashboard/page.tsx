@@ -136,7 +136,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   });
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 2.5rem" }}>
+    <div style={{ maxWidth: 2000, margin: "0 auto", padding: "2rem 2.5rem" }}>
       
       <style>{`
         .search-container-input {
@@ -240,6 +240,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
+              {/* Replace the header tracking array in src/app/dashboard/page.tsx near line 160 */}
               <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.06)", textAlign: "left", background: "rgba(255, 255, 255, 0.01)" }}>
                 {[
                   { key: "company", label: "Company", sortable: true, width: "25%" },
@@ -247,7 +248,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                   { key: "status", label: "Status", sortable: false, width: "20%" },
                   { key: "appliedDate", label: "Applied", sortable: true, width: "15%" },
                   { key: "followUpDate", label: "Follow-up", sortable: true, width: "15%" },
-                  { key: "", label: "", sortable: false, width: "80px" },
+                  { key: "", label: "", sortable: false, width: "50px" }, // Compressed row action block space
                 ].map((col) => (
                   <th key={col.key} style={{ padding: "1rem", color: "rgba(255, 255, 255, 0.45)", fontWeight: 600, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.04em", width: col.width }}>
                     {col.sortable ? (
@@ -369,7 +370,7 @@ export default async function DashboardPage({ searchParams }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={modalLabelStyle}>Salary Range</label>
-                  <input type="text" name="salaryRange" defaultValue={editingApp?.salaryRange || ""} placeholder="e.g. $120k–$150k" className="modal-input" />
+                  <input type="text" name="salary" defaultValue={editingApp?.salary || ""} placeholder="e.g. $120k–$150k" className="modal-input" />
                 </div>
                 <div>
                   <label style={modalLabelStyle}>Job URL</label>

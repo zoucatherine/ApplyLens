@@ -1,6 +1,7 @@
 // src/app/dashboard/ApplicationRow.tsx
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ApplicationStatus, STATUS_LABELS } from "@/types";
 
 interface Application {
@@ -14,18 +15,18 @@ interface Application {
 
 type Props = {
   app: Application;
+  currentFilters: Record<string, string>;
 };
 
-export default function ApplicationRow({ app }: Props) {
+export default function ApplicationRow({ app, currentFilters }: Props) {
+  const router = useRouter();
   
-  // Custom parsing helper for clean visualization
   const formatDate = (dateVal: Date | string | null) => {
     if (!dateVal) return "—";
     const d = new Date(dateVal);
     return d.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" });
   };
 
-  // Status mapping schema to align badge glows with your stats page metrics
   const statusStyles: Record<string, { bg: string; text: string }> = {
     WISHLIST: { bg: "rgba(255, 255, 255, 0.05)", text: "rgba(255, 255, 255, 0.7)" },
     APPLIED: { bg: "rgba(59, 130, 246, 0.15)", text: "#3b82f6" },
@@ -38,84 +39,92 @@ export default function ApplicationRow({ app }: Props) {
 
   const currentStyle = statusStyles[app.status] || statusStyles.WISHLIST;
 
+  // Generate target edit string token parameter map
+  const editUrl = `/dashboard?${new URLSearchParams({ ...currentFilters, edit: app.id }).toString()}`;
+
+  const handleRowClick = () => {
+    router.push(editUrl);
+  };
+
   return (
     <>
       <style>{`
         .dashboard-row {
           border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-          transition: background 0.2s ease, transform 0.2s ease;
+          cursor: pointer;
+          transition: background 0.2s ease, transform 0.15s ease;
         }
         .dashboard-row:hover {
-          background: rgba(255, 255, 255, 0.015);
+          background: rgba(255, 255, 255, 0.02);
           transform: translateX(2px);
         }
-        .row-action-btn {
+        .row-actions-wrapper {
+          opacity: 0;
+          display: inline-flex;
+          gap: 0.35rem;
+          transition: opacity 0.2s ease;
+        }
+        .dashboard-row:hover .row-actions-wrapper {
+          opacity: 1;
+        }
+        .row-action-btn-icon {
           background: transparent;
           border: none;
-          color: rgba(255, 255, 255, 0.25);
+          color: rgba(255, 255, 255, 0.3);
           cursor: pointer;
-          padding: 4px;
-          border-radius: 4px;
+          padding: 6px;
+          border-radius: 6px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           transition: color 0.15s ease, background 0.15s ease;
         }
-        .row-action-btn:hover {
+        .action-delete:hover {
           color: #ef4444;
           background: rgba(239, 68, 68, 0.1);
         }
       `}</style>
 
-      <tr className="dashboard-row">
-        {/* Company Column */}
+      <tr className="dashboard-row" onClick={handleRowClick}>
         <td style={{ padding: "0.95rem 1rem", fontSize: "0.9rem", fontWeight: 600, color: "#fff" }}>
           {app.company}
         </td>
 
-        {/* Role Column */}
         <td style={{ padding: "0.95rem 1rem", fontSize: "0.875rem", color: "rgba(255, 255, 255, 0.65)" }}>
           {app.role}
         </td>
 
-        {/* Custom Status Pill Tag */}
-        <td style={{ padding: "0.95rem 1rem" }}>
-          <span
-            style={{
-              display: "inline-block",
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              padding: "0.25rem 0.6rem",
-              borderRadius: 6,
-              background: currentStyle.bg,
-              color: currentStyle.text,
-              border: `1px solid ${currentStyle.bg}`,
-            }}
-          >
+        <td>
+          <span style={{ display: "inline-block", fontSize: "0.75rem", fontWeight: 600, padding: "0.25rem 0.6rem", borderRadius: 6, background: currentStyle.bg, color: currentStyle.text, border: `1px solid ${currentStyle.bg}` }}>
             {STATUS_LABELS[app.status as ApplicationStatus] || app.status}
           </span>
         </td>
 
-        {/* Applied Date Column */}
         <td style={{ padding: "0.95rem 1rem", fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.5)" }}>
           {formatDate(app.appliedDate)}
         </td>
 
-        {/* Follow-up Date Column */}
         <td style={{ padding: "0.95rem 1rem", fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.5)" }}>
           {formatDate(app.followUpDate)}
         </td>
 
-        {/* Tail End Trash Action Dropdown */}
-        <td style={{ padding: "0.95rem 1rem", textAlign: "right" }}>
-          <button 
-            className="row-action-btn" 
-            title="Delete tracking card entry"
-            onClick={() => {
-              if(confirm("Are you sure you want to delete this application?")) {
-                // Inline integration hook pattern
-              }
-            }}
-          >
-            <i className="ti ti-trash" style={{ fontSize: "0.95rem" }} />
-          </button>
+        {/* Action Tray */}
+        <td style={{ padding: "0.5rem 1rem", textAlign: "right", verticalAlign: "middle" }}>
+          <div className="row-actions-wrapper">
+            <button 
+              className="row-action-btn-icon action-delete" 
+              title="Delete entry"
+              onClick={(e) => {
+                // e.stopPropagation stops the row click event handler from triggering 
+                e.stopPropagation();
+                if(confirm("Are you sure you want to delete this application?")) {
+                  // Integration execution hook pattern
+                }
+              }}
+            >
+              <i className="ti ti-trash" style={{ fontSize: "0.95rem" }} />
+            </button>
+          </div>
         </td>
       </tr>
     </>
