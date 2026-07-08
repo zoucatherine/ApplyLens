@@ -1,10 +1,9 @@
 // src/app/dashboard/page.tsx
-// This is a Server Component — data is fetched on the server
-
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ApplicationStatus, PIPELINE_STATUSES, STATUS_LABELS } from "@/types";
+import { ApplicationStatus, STATUS_LABELS } from "@/types";
 import ApplicationRow from "./ApplicationRow";
+import StatusDropdown from "./StatusDropdown"; // <-- Import your new component here!
 
 type Props = {
   searchParams: Promise<{
@@ -22,7 +21,6 @@ export default async function DashboardPage({ searchParams }: Props) {
   const sortOrder = order === "asc" ? "asc" : "desc";
   const searchQuery = search?.trim() || "";
 
-  // Map sort fields to Prisma field names
   const sortFieldMap: Record<string, string> = {
     company: "company",
     role: "role",
@@ -30,7 +28,6 @@ export default async function DashboardPage({ searchParams }: Props) {
     followUpDate: "followUpDate",
   };
 
-  // Helper to build sort URL preserving other params
   const buildSortUrl = (field: string) => {
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
@@ -45,7 +42,6 @@ export default async function DashboardPage({ searchParams }: Props) {
     return `/dashboard?${params.toString()}`;
   };
 
-  // Build where clause for Prisma
   const where = {
     ...(statusFilter ? { status: statusFilter } : {}),
     ...(searchQuery
@@ -60,7 +56,6 @@ export default async function DashboardPage({ searchParams }: Props) {
       : {}),
   };
 
-  // Fetch filtered applications with sorting
   const applications = await prisma.application.findMany({
     where,
     orderBy: sortField && sortFieldMap[sortField]
@@ -97,17 +92,12 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Combined Search & Filter Controls Bar */}
+      {/* Search & Filter Controls */}
       <div style={{ marginBottom: "2rem" }}>
-        <form
-          style={{ display: "flex", gap: "0.5rem", width: "100%" }}
-          action="/dashboard"
-          method="GET"
-        >
+        <form style={{ display: "flex", gap: "0.5rem", width: "100%" }} action="/dashboard" method="GET">
           {sort && <input type="hidden" name="sort" value={sort} />}
           {order && <input type="hidden" name="order" value={order} />}
           
-          {/* Main Search Input */}
           <div style={{ position: "relative", flex: 1 }}>
             <input
               type="search"
@@ -129,66 +119,17 @@ export default async function DashboardPage({ searchParams }: Props) {
             )}
           </div>
 
-          {/* Wrapper to hold dropdown and native search action together */}
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            {/* FIXED: Removed onChange function so it is a pure HTML server component element */}
-            <select
-              name="status"
-              defaultValue={statusFilter || ""}
-              style={{
-                background: "var(--surface)",
-                color: "var(--text)",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                padding: "0 1rem",
-                fontSize: "0.9rem",
-                fontWeight: 500,
-                cursor: "pointer",
-                outline: "none",
-                minWidth: "150px"
-              }}
-            >
-              <option value="">All Statuses</option>
-              {PIPELINE_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_LABELS[status]}
-                </option>
-              ))}
-            </select>
-
-            {/* Added explicit Go/Filter button instead of runtime JavaScript event handlers */}
-            <button
-              type="submit"
-              style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                color: "var(--text)",
-                padding: "0 1rem",
-                cursor: "pointer",
-                fontSize: "0.85rem",
-                fontWeight: 600
-              }}
-            >
-              Filter
-            </button>
-          </div>
+          {/* Render your interactive client dropdown inside the server framework container */}
+          <StatusDropdown defaultValue={statusFilter || ""} />
         </form>
       </div>
 
-      {/* Applications Table View */}
+      {/* Table */}
       {applications.length === 0 ? (
         <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-muted)" }}>
           <p style={{ fontSize: "1.1rem" }}>
-            {statusFilter
-              ? `No applications with status "${STATUS_LABELS[statusFilter]}"`
-              : "No applications yet."}
+            {statusFilter ? `No applications with status "${STATUS_LABELS[statusFilter]}"` : "No applications yet."}
           </p>
-          {!statusFilter && (
-            <Link href="/applications/new" style={{ color: "var(--accent)", marginTop: 8, display: "inline-block" }}>
-              Add your first one →
-            </Link>
-          )}
         </div>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -210,31 +151,15 @@ export default async function DashboardPage({ searchParams }: Props) {
                     fontWeight: 500,
                     fontSize: "0.85rem",
                     cursor: col.sortable ? "pointer" : "default",
-                    userSelect: "none",
                     whiteSpace: "nowrap",
                   }}
                 >
                   {col.sortable ? (
-                    <a
-                      href={buildSortUrl(col.key)}
-                      style={{
-                        color: "inherit",
-                        textDecoration: "none",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "0.35rem",
-                      }}
-                    >
+                    <a href={buildSortUrl(col.key)} style={{ color: "inherit", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                       {col.label}
-                      {sort === col.key && (
-                        <span style={{ fontSize: "0.7rem" }}>
-                          {sortOrder === "asc" ? "▲" : "▼"}
-                        </span>
-                      )}
+                      {sort === col.key && <span style={{ fontSize: "0.7rem" }}>{sortOrder === "asc" ? "▲" : "▼"}</span>}
                     </a>
-                  ) : (
-                    col.label
-                  )}
+                  ) : col.label}
                 </th>
               ))}
             </tr>
