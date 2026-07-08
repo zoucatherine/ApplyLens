@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 const NAV_LINKS = [
   { label: "Dashboard", href: "/dashboard", icon: "ti-layout-dashboard" },
   { label: "Statistics", href: "/statistical-analysis", icon: "ti-chart-sankey" },
+  { label: "Skills Inventory", href: "/skills", icon: "ti-code" },
 ];
 
 export default function Sidebar() {
