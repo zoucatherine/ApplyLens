@@ -10,29 +10,8 @@ export default function ProfilePage() {
 
   return (
     <div style={{ maxWidth: 2000, margin: "0 auto", padding: "2rem 2.5rem" }}>
-      {/* Header with back navigation button */}
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
-        <TransitionLink
-          href="/dashboard"
-          style={{
-            background: "rgba(255, 255, 255, 0.05)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            color: "rgba(255, 255, 255, 0.7)",
-            padding: "0.5rem 0.85rem",
-            borderRadius: 8,
-            fontSize: "0.85rem",
-            fontWeight: 500,
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            transition: "background 0.15s ease",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"; }}
-        >
-          ← Back
-        </TransitionLink>
+        
         <div>
           <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>Profile Settings</h1>
           <p style={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "0.875rem", marginTop: 4 }}>
