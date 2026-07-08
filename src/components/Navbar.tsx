@@ -1,72 +1,175 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Statistics", href: "/statistical-analysis" },
+  { label: "Dashboard", href: "/dashboard", icon: "ti-layout-dashboard" },
+  { label: "Statistics", href: "/statistical-analysis", icon: "ti-chart-sankey" },
 ];
 
-export default function Navbar() {
+export default function Sidebar() {
   const pathname = usePathname();
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const drawerRef = useRef<HTMLDivElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  // Close drawer on route change
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
-  // Close drawer on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+        setMobileOpen(false);
       }
     }
-    if (menuOpen) document.addEventListener("mousedown", handleClick);
+    if (mobileOpen) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [menuOpen]);
+  }, [mobileOpen]);
+
+  const links = (
+    <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem", flex: 1 }}>
+      {NAV_LINKS.map(({ label, href, icon }) => {
+        const active = pathname === href;
+        return (
+          <Link
+            key={href}
+            href={href}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.65rem",
+              padding: "0.55rem 0.85rem",
+              borderRadius: 8,
+              fontSize: "0.875rem",
+              fontWeight: active ? 600 : 400,
+              color: active ? "#fff" : "rgba(255,255,255,0.55)",
+              background: active ? "rgba(124,58,237,0.35)" : "transparent",
+              textDecoration: "none",
+              transition: "background 0.15s ease, color 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              if (!active) {
+                e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                e.currentTarget.style.color = "#fff";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!active) {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "rgba(255,255,255,0.55)";
+              }
+            }}
+          >
+            <i className={`ti ${icon}`} style={{ fontSize: 17 }} aria-hidden />
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  const sidebarInner = (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "1.25rem 0.85rem" }}>
+      {/* Brand */}
+      <Link
+        href="/"
+        style={{
+          fontWeight: 800,
+          fontSize: "1.1rem",
+          letterSpacing: "-0.02em",
+          textDecoration: "none",
+          background: "linear-gradient(135deg, #a78bfa, #7c3aed)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+          marginBottom: "2rem",
+          paddingLeft: "0.35rem",
+          display: "block",
+        }}
+      >
+        ApplyLens
+      </Link>
+
+      {/* Nav links */}
+      {links}
+
+      {/* Bottom: profile */}
+      <div
+        style={{
+          marginTop: "auto",
+          paddingTop: "1rem",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.65rem",
+          padding: "0.65rem 0.5rem",
+          borderRadius: 8,
+          cursor: "pointer",
+          transition: "background 0.15s ease",
+        }}
+        title="Profile (coming soon)"
+        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+      >
+        <div
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            color: "#fff",
+            flexShrink: 0,
+          }}
+        >
+          U
+        </div>
+        <div>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#fff" }}>Profile</div>
+          <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>Coming soon</div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
-      <nav
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          height: 56,
-          display: "flex",
-          alignItems: "center",
-          padding: "0 1.5rem",
-          justifyContent: "space-between",
-          transition: "background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease",
-          background: scrolled
-            ? "rgba(91, 33, 182, 0.85)"
-            : "transparent",
-          backdropFilter: scrolled ? "blur(12px)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
-          boxShadow: scrolled ? "0 1px 0 rgba(255,255,255,0.06)" : "none",
-        }}
-      >
-        {/* Left — Logo */}
+      {/* Desktop sidebar */}
+      <aside style={{
+        position: "fixed",
+        top: 0, left: 0, bottom: 0,
+        width: 220,
+        background: "rgba(18, 6, 40, 0.97)",
+        borderRight: "1px solid rgba(255,255,255,0.07)",
+        zIndex: 50,
+        display: "flex",
+        flexDirection: "column",
+      }} className="sidebar-desktop">
+        {sidebarInner}
+      </aside>
+
+      {/* Mobile topbar */}
+      <div style={{
+        position: "fixed",
+        top: 0, left: 0, right: 0,
+        height: 52,
+        background: "rgba(18, 6, 40, 0.97)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 1rem",
+      }} className="sidebar-mobile-bar">
         <Link
           href="/"
           style={{
             fontWeight: 800,
-            fontSize: "1.1rem",
-            letterSpacing: "-0.02em",
+            fontSize: "1.05rem",
             textDecoration: "none",
             background: "linear-gradient(135deg, #a78bfa, #7c3aed)",
             WebkitBackgroundClip: "text",
@@ -76,220 +179,83 @@ export default function Navbar() {
         >
           ApplyLens
         </Link>
-
-        {/* Center — Desktop nav links */}
-        <div
+        <button
+          onClick={() => setMobileOpen((o) => !o)}
+          aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
           style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: "0.25rem",
             display: "flex",
-            gap: "0.25rem",
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
+            flexDirection: "column",
+            gap: 5,
           }}
-          className="nav-desktop"
         >
-          {NAV_LINKS.map(({ label, href }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                style={{
-                  padding: "0.4rem 0.9rem",
-                  borderRadius: 8,
-                  fontSize: "0.875rem",
-                  fontWeight: active ? 600 : 400,
-                  color: active ? "#fff" : "rgba(255,255,255,0.65)",
-                  textDecoration: "none",
-                  background: active ? "rgba(255,255,255,0.1)" : "transparent",
-                  transition: "color 0.2s ease, background 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.color = "#fff";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.color = "rgba(255,255,255,0.65)";
-                    e.currentTarget.style.background = "transparent";
-                  }
-                }}
-              >
-                {label}
-              </Link>
-            );
-          })}
-        </div>
+          {[0, 1, 2].map((i) => (
+            <span key={i} style={{
+              display: "block",
+              width: 22,
+              height: 2,
+              background: "#fff",
+              borderRadius: 2,
+              transition: "transform 0.25s ease, opacity 0.25s ease",
+              transform: mobileOpen
+                ? i === 0 ? "translateY(7px) rotate(45deg)"
+                : i === 2 ? "translateY(-7px) rotate(-45deg)"
+                : "scaleX(0)"
+                : "none",
+              opacity: mobileOpen && i === 1 ? 0 : 1,
+            }} />
+          ))}
+        </button>
+      </div>
 
-        {/* Right — Profile + Hamburger */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-
-          {/* Profile stub — desktop only */}
-          <div className="nav-desktop">
-            <div
-              title="Profile (coming soon)"
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                color: "#fff",
-                cursor: "pointer",
-                border: "2px solid rgba(255,255,255,0.15)",
-                transition: "border-color 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.4)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.15)";
-              }}
-            >
-              U
-            </div>
-          </div>
-
-          {/* Hamburger — mobile only */}
-          <div className="nav-mobile">
-            <button
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Toggle menu"
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                padding: "0.25rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: 5,
-              }}
-            >
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  style={{
-                    display: "block",
-                    width: 22,
-                    height: 2,
-                    background: "#fff",
-                    borderRadius: 2,
-                    transition: "transform 0.25s ease, opacity 0.25s ease",
-                    transform:
-                      menuOpen
-                        ? i === 0
-                          ? "translateY(7px) rotate(45deg)"
-                          : i === 2
-                          ? "translateY(-7px) rotate(-45deg)"
-                          : "scaleX(0)"
-                        : "none",
-                    opacity: menuOpen && i === 1 ? 0 : 1,
-                  }}
-                />
-              ))}
-            </button>
-          </div>
-
-        </div>
-      </nav>
-
-      {/* Mobile drawer overlay */}
-      {menuOpen && (
+      {/* Mobile overlay */}
+      {mobileOpen && (
         <div
+          onClick={() => setMobileOpen(false)}
           style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 40,
-            background: "rgba(0,0,0,0.4)",
+            position: "fixed", inset: 0, zIndex: 48,
+            background: "rgba(0,0,0,0.5)",
             backdropFilter: "blur(2px)",
           }}
+          className="sidebar-mobile-overlay"
         />
       )}
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer (slides in from left) */}
       <div
-        ref={drawerRef}
+        ref={sidebarRef}
         style={{
           position: "fixed",
-          top: 56,
-          left: 0,
-          right: 0,
+          top: 52, bottom: 0, left: 0,
+          width: 220,
+          background: "rgba(18, 6, 40, 0.98)",
+          borderRight: "1px solid rgba(255,255,255,0.07)",
           zIndex: 49,
-          background: "rgba(30, 10, 60, 0.97)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          padding: menuOpen ? "1rem 1.5rem 1.5rem" : "0 1.5rem",
-          maxHeight: menuOpen ? 400 : 0,
-          overflow: "hidden",
-          transition: "max-height 0.3s ease, padding 0.3s ease",
+          transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.3s ease",
         }}
+        className="sidebar-mobile-drawer"
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-          {NAV_LINKS.map(({ label, href }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                style={{
-                  padding: "0.75rem 0.85rem",
-                  borderRadius: 8,
-                  fontSize: "1rem",
-                  fontWeight: active ? 600 : 400,
-                  color: active ? "#fff" : "rgba(255,255,255,0.65)",
-                  textDecoration: "none",
-                  background: active ? "rgba(124, 58, 237, 0.3)" : "transparent",
-                  transition: "background 0.2s ease, color 0.2s ease",
-                }}
-              >
-                {label}
-              </Link>
-            );
-          })}
-
-          <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "0.5rem 0" }} />
-
-          {/* Profile row in mobile drawer */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.5rem 0.85rem" }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                color: "#fff",
-                flexShrink: 0,
-              }}
-            >
-              U
-            </div>
-            <div>
-              <div style={{ fontSize: "0.875rem", fontWeight: 600, color: "#fff" }}>Profile</div>
-              <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>Coming soon</div>
-            </div>
-          </div>
-        </div>
+        {sidebarInner}
       </div>
 
-      {/* Global styles for desktop/mobile visibility */}
       <style>{`
-        .nav-desktop { display: flex !important; align-items: center; }
-        .nav-mobile  { display: flex !important; }
-        @media (max-width: 640px) {
-          .nav-desktop { display: none !important; }
-          .nav-mobile  { display: flex !important; flex-direction: column; gap: 5px; }
+        /* Desktop Defaults (Screens wider than 768px) */
+        .sidebar-desktop        { display: flex !important; }
+        .sidebar-mobile-bar     { display: none !important; }
+        .sidebar-mobile-drawer  { display: none !important; }
+        .sidebar-mobile-overlay { display: none !important; }
+
+        /* Mobile Adjustments (Screens 768px and narrower) */
+        @media (max-width: 768px) {
+          .sidebar-desktop        { display: none !important; }
+          .sidebar-mobile-bar     { display: flex !important; }
+          .sidebar-mobile-drawer  { display: flex !important; }
+          .sidebar-mobile-overlay { display: block !important; }
         }
       `}</style>
     </>

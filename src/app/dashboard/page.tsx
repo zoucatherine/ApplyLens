@@ -11,14 +11,16 @@ type Props = {
     status?: string;
     sort?: string;
     order?: string;
+    search?: string;
   }>;
 };
 
 export default async function DashboardPage({ searchParams }: Props) {
-  const { status: statusParam, sort, order } = await searchParams;
+  const { status: statusParam, sort, order, search } = await searchParams;
   const statusFilter = statusParam as ApplicationStatus | undefined;
   const sortField = sort as "company" | "role" | "appliedDate" | "followUpDate" | undefined;
   const sortOrder = order === "asc" ? "asc" : "desc";
+  const searchQuery = search?.trim() || "";
 
   // Map sort fields to Prisma field names
   const sortFieldMap: Record<string, string> = {
@@ -32,6 +34,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const buildSortUrl = (field: string) => {
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
+    if (searchQuery) params.set("search", searchQuery);
     if (sort === field) {
       params.set("sort", field);
       params.set("order", sortOrder === "asc" ? "desc" : "asc");
@@ -43,7 +46,19 @@ export default async function DashboardPage({ searchParams }: Props) {
   };
 
   // Build where clause for Prisma
-  const where = statusFilter ? { status: statusFilter } : {};
+  const where = {
+    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(searchQuery
+      ? {
+          OR: [
+            { company: { contains: searchQuery, mode: "insensitive" as const } },
+            { role: { contains: searchQuery, mode: "insensitive" as const } },
+            { notes: { contains: searchQuery, mode: "insensitive" as const } },
+            { location: { contains: searchQuery, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
 
   // Fetch filtered applications with sorting
   const applications = await prisma.application.findMany({
@@ -85,7 +100,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     : 0;
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1rem" }}>
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "calc(56px + 2rem) 1rem 2rem" }}>
       {/* Analytics Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
         <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "1.25rem" }}>
@@ -140,6 +155,37 @@ export default async function DashboardPage({ searchParams }: Props) {
             + Add Application
           </Link>
         </div>
+      </div>
+
+      {/* Search bar */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <form
+          style={{ display: "flex", gap: "0.5rem" }}
+          action="/dashboard"
+          method="GET"
+        >
+          {statusFilter && (
+            <input type="hidden" name="status" value={statusFilter} />
+          )}
+          {sort && <input type="hidden" name="sort" value={sort} />}
+          {order && <input type="hidden" name="order" value={order} />}
+          <input
+            type="search"
+            name="search"
+            value={searchQuery}
+            placeholder="Search company, role, notes, location..."
+            className="search-input"
+          />
+          {searchQuery && (
+            <a
+              href={buildSortUrl(sortField || "company").replace(/search=[^&]*&?/, "")}
+              className="clear-btn"
+              title="Clear search"
+            >
+              ✕
+            </a>
+          )}
+        </form>
       </div>
 
       {/* Status filter bar */}

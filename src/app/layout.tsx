@@ -1,31 +1,41 @@
 // src/app/layout.tsx
-
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { headers } from "next/headers";
-import Navbar from "@/components/Navbar";
-import "./globals.css";
-
-
-const inter = Inter({ subsets: ["latin"] });
+import Sidebar from "@/components/Navbar";
+import "./globals.css"; // <-- Added to apply your website's theme styles globally
 
 export const metadata: Metadata = {
   title: "ApplyLens",
   description: "Track every application, follow-up, and outcome in one place.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const headersList = headers();
+// Changed to an async function to correctly await headers()
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers();
   const pathname = headersList.get("x-invoke-path") || "";
   const showNav = pathname !== "/";
 
   return (
     <html lang="en">
-      <body className={inter.className}>
-        {showNav && <Navbar />}
-        <main style={{ paddingTop: showNav ? 56 : 0 }}>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+        />
+      </head>
+      <body>
+        {showNav && <Sidebar />}
+        <main style={{
+          marginLeft: showNav ? 220 : 0,
+          paddingTop: 0,
+        }}>
           {children}
         </main>
+        <style>{`
+          @media (max-width: 768px) {
+            main { margin-left: 0 !important; padding-top: 52px; }
+          }
+        `}</style>
       </body>
     </html>
   );
