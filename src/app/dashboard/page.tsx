@@ -3,7 +3,7 @@
 
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ApplicationStatus, PIPELINE_STATUSES, STATUS_COLORS, STATUS_LABELS } from "@/types";
+import { ApplicationStatus, PIPELINE_STATUSES, STATUS_LABELS } from "@/types";
 import ApplicationRow from "./ApplicationRow";
 
 type Props = {
@@ -68,20 +68,10 @@ export default async function DashboardPage({ searchParams }: Props) {
       : { updatedAt: "desc" },
   });
 
-  // For stats, we need total counts (unfiltered) to show in the filter bar
-  const counts = PIPELINE_STATUSES.reduce(
-    (acc, status) => {
-      acc[status] = applications.filter((a) => a.status === status).length;
-      return acc;
-    },
-    {} as Record<ApplicationStatus, number>
-  );
-
   return (
-    /* FIXED: Changed padding to match the Statistics component top layout rules exactly */
     <div style={{ maxWidth: 2000, margin: "0 auto", padding: "1.5rem 2rem" }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
           <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Dashboard</h1>
           <p style={{ color: "var(--text-muted)", marginTop: 4 }}>
@@ -90,7 +80,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           </p>
         </div>
         
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div>
           <Link
             href="/applications/new"
             style={{
@@ -107,97 +97,86 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Search bar */}
-      <div style={{ marginBottom: "1.5rem" }}>
+      {/* Combined Search & Filter Controls Bar */}
+      <div style={{ marginBottom: "2rem" }}>
         <form
-          style={{ display: "flex", gap: "0.5rem" }}
+          style={{ display: "flex", gap: "0.5rem", width: "100%" }}
           action="/dashboard"
           method="GET"
         >
-          {statusFilter && (
-            <input type="hidden" name="status" value={statusFilter} />
-          )}
           {sort && <input type="hidden" name="sort" value={sort} />}
           {order && <input type="hidden" name="order" value={order} />}
-          <input
-            type="search"
-            name="search"
-            value={searchQuery}
-            placeholder="Search company, role, notes, location..."
-            className="search-input"
-            style={{ width: "100%" }}
-          />
-          {searchQuery && (
-            <a
-              href={buildSortUrl(sortField || "company").replace(/search=[^&]*&?/, "")}
-              className="clear-btn"
-              title="Clear search"
+          
+          {/* Main Search Input */}
+          <div style={{ position: "relative", flex: 1 }}>
+            <input
+              type="search"
+              name="search"
+              defaultValue={searchQuery}
+              placeholder="Search company, role, notes, location..."
+              className="search-input"
+              style={{ width: "100%" }}
+            />
+            {searchQuery && (
+              <a
+                href={statusFilter ? `/dashboard?status=${statusFilter}` : "/dashboard"}
+                className="clear-btn"
+                title="Clear search"
+                style={{ right: "12px" }}
+              >
+                ✕
+              </a>
+            )}
+          </div>
+
+          {/* Wrapper to hold dropdown and native search action together */}
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            {/* FIXED: Removed onChange function so it is a pure HTML server component element */}
+            <select
+              name="status"
+              defaultValue={statusFilter || ""}
+              style={{
+                background: "var(--surface)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                padding: "0 1rem",
+                fontSize: "0.9rem",
+                fontWeight: 500,
+                cursor: "pointer",
+                outline: "none",
+                minWidth: "150px"
+              }}
             >
-              ✕
-            </a>
-          )}
+              <option value="">All Statuses</option>
+              {PIPELINE_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {STATUS_LABELS[status]}
+                </option>
+              ))}
+            </select>
+
+            {/* Added explicit Go/Filter button instead of runtime JavaScript event handlers */}
+            <button
+              type="submit"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+                color: "var(--text)",
+                padding: "0 1rem",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+                fontWeight: 600
+              }}
+            >
+              Filter
+            </button>
+          </div>
         </form>
       </div>
 
-      {/* Status filter bar */}
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "1.5rem", alignItems: "center" }}>
-        <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 500 }}>Filter:</span>
-        <Link
-          href="/dashboard"
-          style={{
-            padding: "0.4rem 0.85rem",
-            borderRadius: 20,
-            fontSize: "0.8rem",
-            fontWeight: 600,
-            background: !statusFilter ? "var(--accent)" : "var(--surface)",
-            color: !statusFilter ? "#fff" : "var(--text)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          All
-        </Link>
-        {PIPELINE_STATUSES.map((status) => (
-          <Link
-            key={status}
-            href={`/dashboard?status=${status}`}
-            style={{
-              padding: "0.4rem 0.85rem",
-              borderRadius: 20,
-              fontSize: "0.8rem",
-              fontWeight: 600,
-              background: statusFilter === status ? STATUS_COLORS[status] : "var(--surface)",
-              color: statusFilter === status ? "#fff" : "var(--text)",
-              border: `1px solid ${statusFilter === status ? STATUS_COLORS[status] : "var(--border)"}`,
-            }}
-          >
-            {STATUS_LABELS[status]}
-          </Link>
-        ))}
-      </div>
-
-      {/* Stats row (filtered) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.75rem", marginBottom: "2rem" }}>
-        {PIPELINE_STATUSES.map((status) => (
-          <div
-            key={status}
-            style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderLeft: `3px solid ${STATUS_COLORS[status]}`,
-              borderRadius: 8,
-              padding: "0.75rem 1rem",
-              opacity: statusFilter && statusFilter !== status ? 0.5 : 1,
-            }}
-          >
-            <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>{counts[status]}</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 2 }}>
-              {STATUS_LABELS[status]}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Applications table */}
+      {/* Applications Table View */}
       {applications.length === 0 ? (
         <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-muted)" }}>
           <p style={{ fontSize: "1.1rem" }}>
