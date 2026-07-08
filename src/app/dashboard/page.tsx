@@ -78,7 +78,8 @@ export default async function DashboardPage({ searchParams }: Props) {
   );
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "calc(56px + 2rem) 1rem 2rem" }}>
+    /* UPDATED: Increased maxWidth to 1400 and added extra padding side space */
+    <div style={{ maxWidth: 1400, margin: "0 auto", padding: "calc(56px + 2rem) 2rem 2rem" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>
@@ -124,6 +125,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             value={searchQuery}
             placeholder="Search company, role, notes, location..."
             className="search-input"
+            style={{ width: "100%" }} /* Ensure input stretches beautifully */
           />
           {searchQuery && (
             <a
@@ -174,7 +176,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       </div>
 
       {/* Stats row (filtered) */}
-      <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.75rem", marginBottom: "2rem" }}>
         {PIPELINE_STATUSES.map((status) => (
           <div
             key={status}
@@ -184,7 +186,6 @@ export default async function DashboardPage({ searchParams }: Props) {
               borderLeft: `3px solid ${STATUS_COLORS[status]}`,
               borderRadius: 8,
               padding: "0.75rem 1rem",
-              minWidth: 110,
               opacity: statusFilter && statusFilter !== status ? 0.5 : 1,
             }}
           >
@@ -225,7 +226,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                 <th
                   key={col.key}
                   style={{
-                    padding: "0.6rem 1rem",
+                    padding: "0.8rem 1rem",
                     color: col.sortable ? "var(--text)" : "var(--text-muted)",
                     fontWeight: 500,
                     fontSize: "0.85rem",

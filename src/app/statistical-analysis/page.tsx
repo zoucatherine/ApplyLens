@@ -22,7 +22,6 @@ export default async function StatisticalAnalysisPage() {
   const phoneScreen = applications.filter((a) => a.status === "PHONE_SCREEN").length;
   const interview = applications.filter((a) => a.status === "INTERVIEW").length;
 
-  // New Analytics calculations matching the previous page's cards
   const totalApps = applications.length;
   const appliedCountForRate = applications.filter(a => a.status !== "WISHLIST" && a.status !== "WITHDRAWN").length;
   const responseCount = applications.filter(a => ["PHONE_SCREEN", "INTERVIEW", "OFFER", "REJECTED"].includes(a.status)).length;
@@ -43,7 +42,8 @@ export default async function StatisticalAnalysisPage() {
     : 0;
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1rem" }}>
+    /* UPDATED: Aligned maxWidth and padding constraints with the main dashboard layout expansion */
+    <div style={{ maxWidth: 1400, margin: "0 auto", padding: "2rem" }}>
       <h1 style={{ fontSize: "1.75rem", fontWeight: 700 }}>Statistical Analysis</h1>
       <p style={{ color: "var(--text-muted)", marginTop: 4, marginBottom: "2rem" }}>
         How your applications are tracking, decided vs still in progress.
