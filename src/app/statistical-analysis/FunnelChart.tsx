@@ -23,8 +23,8 @@ type Counts = {
 const NODE_W = 14;
 
 // Widescreen Chart Scaling Constraints
-const CHART_W = 960; // Expanded to take advantage of container expansion
-const CHART_H = 300; // Trimmed down slightly to reduce vertical space
+const CHART_W = 960; 
+const CHART_H = 300; 
 
 // Evenly distributed columns across the wider grid canvas
 const X_SOURCE = 30;
@@ -89,93 +89,176 @@ export default function FunnelChart({ counts }: { counts: Counts }) {
 
   return (
     <div ref={containerRef} style={{ position: "relative", width: "100%", height: "100%" }}>
+      
+      {/* Dynamic inline entry animations */}
+      <style>{`
+        @keyframes revealFlow {
+          from {
+            transform: scaleX(0);
+          }
+          to {
+            transform: scaleX(1);
+          }
+        }
+        @keyframes nodeGrow {
+          from {
+            transform: scaleY(0);
+            opacity: 0;
+          }
+          to {
+            transform: scaleY(1);
+            opacity: 1;
+          }
+        }
+        @keyframes labelReveal {
+          from {
+            opacity: 0;
+            transform: translateX(-5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .flow-mask-rect {
+          transform-origin: left center;
+          transform: scaleX(0); /* <-- CRITICAL: Forces it to start completely hidden/blank */
+          animation: revealFlow 1.1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        .sankey-node {
+          transform-origin: center;
+          opacity: 0; /* <-- Prevents flashing before nodeGrow triggers */
+          animation: nodeGrow 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .sankey-text {
+          opacity: 0; /* <-- Prevents flashing before labelReveal triggers */
+          animation: labelReveal 0.5s ease-out forwards;
+        }
+      `}</style>
+
       <svg
         viewBox={`0 0 ${CHART_W} ${CHART_H}`}
         width="100%"
         height="100%"
         style={{ display: "block", overflow: "visible" }}
         role="img"
-        aria-label={`Application funnel: ${total} total, ${undecided} undecided, ${decided} decided (${offer} offer, ${rejected} rejected, ${withdrawn} withdrawn)`}
       >
-        <rect x={X_SOURCE} y={sourceY} width={NODE_W} height={sourceH} rx="4" style={{ fill: "var(--text-muted)" }} />
-        <text x={X_SOURCE + NODE_W + 10} y={sourceYMid - 5} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-          Applications
-        </text>
-        <text x={X_SOURCE + NODE_W + 10} y={sourceYMid + 13} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-          {total} total
-        </text>
+        {/* Definitional Clip Paths */}
+        <defs>
+          <clipPath id="reveal-mask-tier1">
+            <rect className="flow-mask-rect" x="0" y="0" width={X_LEVEL1} height={CHART_H} style={{ animationDelay: "0.1s" }} />
+          </clipPath>
+          <clipPath id="reveal-mask-tier2">
+            <rect className="flow-mask-rect" x={X_LEVEL1} y="0" width={CHART_W - X_LEVEL1} height={CHART_H} style={{ animationDelay: "0.4s" }} />
+          </clipPath>
+        </defs>
 
-        {/* Flow: Applications -> Undecided (hoverable) */}
-        <path
-          d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, undecidedY, undecidedY + undecidedH)}
-          style={{
-            fill: "var(--text-muted)",
-            fillOpacity: tooltip ? 0.35 : 0.2,
-            cursor: "pointer",
-            transition: "fill-opacity 0.15s",
-          }}
-          onMouseMove={handleUndecidedHover}
-          onMouseLeave={() => setTooltip(null)}
-        />
-        <rect x={X_LEVEL1} y={undecidedY} width={NODE_W} height={undecidedH} rx="4" style={{ fill: "var(--text-muted)" }} />
-        <text x={X_LEVEL1 + NODE_W + 10} y={undecidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-          Undecided
-        </text>
-        <text x={X_LEVEL1 + NODE_W + 10} y={undecidedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-          {undecided} in progress
-        </text>
+        {/* Tier 0 Node */}
+        <rect className="sankey-node" x={X_SOURCE} y={sourceY} width={NODE_W} height={sourceH} rx="4" style={{ fill: "var(--text-muted)", animationDelay: "0s" }} />
+        <g className="sankey-text" style={{ animationDelay: "0.2s" }}>
+          <text x={X_SOURCE + NODE_W + 10} y={sourceYMid - 5} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+            Applications
+          </text>
+          <text x={X_SOURCE + NODE_W + 10} y={sourceYMid + 13} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+            {total} total
+          </text>
+        </g>
 
-        {/* Flow: Applications -> Decided */}
-        <path
-          d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, decidedY, decidedY + decidedH)}
-          style={{ fill: "var(--text-muted)", fillOpacity: 0.12 }}
-        />
-        <rect x={X_LEVEL1} y={decidedY} width={NODE_W} height={decidedH} rx="4" style={{ fill: "var(--text-muted)" }} />
-        <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-          Decided
-        </text>
-        <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-          {decided}
-        </text>
+        {/* ========================================== */}
+        {/* TIER 1 FLOWS (MAPPED INTO THE CLIP-MASK)   */}
+        {/* ========================================== */}
+        <g clipPath="url(#reveal-mask-tier1)">
+          {/* Flow: Applications -> Undecided (hoverable) */}
+          <path
+            d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, undecidedY, undecidedY + undecidedH)}
+            style={{
+              fill: "var(--text-muted)",
+              fillOpacity: tooltip ? 0.35 : 0.2,
+              cursor: "pointer",
+              transition: "fill-opacity 0.15s",
+            }}
+            onMouseMove={handleUndecidedHover}
+            onMouseLeave={() => setTooltip(null)}
+          />
+          {/* Flow: Applications -> Decided */}
+          <path
+            d={flowPath(X_SOURCE + NODE_W, sourceY, sourceY + sourceH, X_LEVEL1, decidedY, decidedY + decidedH)}
+            style={{ fill: "var(--text-muted)", fillOpacity: 0.12 }}
+          />
+        </g>
 
-        {/* Flow: Decided -> Offer */}
-        <path
-          d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, offerY, offerY + offerH)}
-          style={{ fill: "#22c55e", fillOpacity: 0.15 }}
-        />
-        <rect x={X_LEVEL2} y={offerY} width={NODE_W} height={offerH} rx="4" style={{ fill: "#22c55e" }} />
-        <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-          Offer
-        </text>
-        <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-          {offer}
-        </text>
+        {/* Tier 1 Nodes */}
+        <rect className="sankey-node" x={X_LEVEL1} y={undecidedY} width={NODE_W} height={undecidedH} rx="4" style={{ fill: "var(--text-muted)", animationDelay: "0.4s" }} />
+        <g className="sankey-text" style={{ animationDelay: "0.5s" }}>
+          <text x={X_LEVEL1 + NODE_W + 10} y={undecidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+            Undecided
+          </text>
+          <text x={X_LEVEL1 + NODE_W + 10} y={undecidedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+            {undecided} in progress
+          </text>
+        </g>
 
-        {/* Flow: Decided -> Rejected */}
-        <path
-          d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, rejectedY, rejectedY + rejectedH)}
-          style={{ fill: "var(--danger)", fillOpacity: 0.15 }}
-        />
-        <rect x={X_LEVEL2} y={rejectedY} width={NODE_W} height={rejectedH} rx="4" style={{ fill: "var(--danger)" }} />
-        <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-          Rejected
-        </text>
-        <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-          {rejected}
-        </text>
+        <rect className="sankey-node" x={X_LEVEL1} y={decidedY} width={NODE_W} height={decidedH} rx="4" style={{ fill: "var(--text-muted)", animationDelay: "0.4s" }} />
+        <g className="sankey-text" style={{ animationDelay: "0.5s" }}>
+          <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+            Decided
+          </text>
+          <text x={X_LEVEL1 + NODE_W + 10} y={decidedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+            {decided}
+          </text>
+        </g>
 
-        {/* Flow: Decided -> Withdrawn */}
-        <path
-          d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, withdrawnY, withdrawnY + withdrawnH)}
-          style={{ fill: "var(--text-muted)", fillOpacity: 0.15 }}
-        />
-        <rect x={X_LEVEL2} y={withdrawnY} width={NODE_W} height={withdrawnH} rx="4" style={{ fill: "var(--text-muted)" }} />
-        <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
-          Withdrawn
-        </text>
-        <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
-          {withdrawn}
-        </text>
+        {/* ========================================== */}
+        {/* TIER 2 FLOWS (MAPPED INTO THE CLIP-MASK)   */}
+        {/* ========================================== */}
+        <g clipPath="url(#reveal-mask-tier2)">
+          {/* Flow: Decided -> Offer */}
+          <path
+            d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, offerY, offerY + offerH)}
+            style={{ fill: "#22c55e", fillOpacity: 0.15 }}
+          />
+          {/* Flow: Decided -> Rejected */}
+          <path
+            d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, rejectedY, rejectedY + rejectedH)}
+            style={{ fill: "var(--danger)", fillOpacity: 0.15 }}
+          />
+          {/* Flow: Decided -> Withdrawn */}
+          <path
+            d={flowPath(X_LEVEL1 + NODE_W, decidedY, decidedY + decidedH, X_LEVEL2, withdrawnY, withdrawnY + withdrawnH)}
+            style={{ fill: "var(--text-muted)", fillOpacity: 0.15 }}
+          />
+        </g>
+
+        {/* Tier 2 Nodes */}
+        <rect className="sankey-node" x={X_LEVEL2} y={offerY} width={NODE_W} height={offerH} rx="4" style={{ fill: "#22c55e", animationDelay: "0.8s" }} />
+        <g className="sankey-text" style={{ animationDelay: "0.9s" }}>
+          <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+            Offer
+          </text>
+          <text x={X_LEVEL2 + NODE_W + 10} y={offerY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+            {offer}
+          </text>
+        </g>
+
+        <rect className="sankey-node" x={X_LEVEL2} y={rejectedY} width={NODE_W} height={rejectedH} rx="4" style={{ fill: "var(--danger)", animationDelay: "0.8s" }} />
+        <g className="sankey-text" style={{ animationDelay: "0.9s" }}>
+          <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+            Rejected
+          </text>
+          <text x={X_LEVEL2 + NODE_W + 10} y={rejectedY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+            {rejected}
+          </text>
+        </g>
+
+        <rect className="sankey-node" x={X_LEVEL2} y={withdrawnY} width={NODE_W} height={withdrawnH} rx="4" style={{ fill: "var(--text-muted)", animationDelay: "0.8s" }} />
+        <g className="sankey-text" style={{ animationDelay: "0.9s" }}>
+          <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 14} style={{ fill: "var(--text)", fontSize: 13, fontWeight: 600 }}>
+            Withdrawn
+          </text>
+          <text x={X_LEVEL2 + NODE_W + 10} y={withdrawnY + 32} style={{ fill: "var(--text-muted)", fontSize: 12 }}>
+            {withdrawn}
+          </text>
+        </g>
       </svg>
 
       {tooltip && (
