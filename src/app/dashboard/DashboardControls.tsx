@@ -15,11 +15,12 @@ const DROPDOWN_COLORS: Record<string, string> = {
   WITHDRAWN: "#6b7280",
 };
 
+// Unified sort options combining field and order direction
 const SORT_OPTIONS = [
-  { key: "company", label: "Company Name" },
-  { key: "role", label: "Role Title" },
-  { key: "appliedDate", label: "Date Applied" },
-  { key: "followUpDate", label: "Follow-up Date" },
+  { key: "appliedDate-desc", label: "Newest first" },
+  { key: "appliedDate-asc", label: "Oldest first" },
+  { key: "company-asc", label: "Company A-Z" },
+  { key: "company-desc", label: "Company Z-A" },
 ];
 
 type Props = {
@@ -71,7 +72,10 @@ export default function DashboardControls({ currentStatus, currentSort, currentO
   };
 
   const currentStatusLabel = currentStatus ? STATUS_LABELS[currentStatus as any] : "All statuses";
-  const currentSortLabel = SORT_OPTIONS.find(o => o.key === currentSort)?.label || "Sort: Default";
+
+  // Reconstruct the current active sort key from the individual params
+  const activeSortKey = currentSort ? `${currentSort}-${currentOrder}` : "";
+  const currentSortLabel = SORT_OPTIONS.find(o => o.key === activeSortKey)?.label || "Sort: Default";
 
   return (
     <div style={{ marginBottom: "1.5rem" }}>
@@ -127,51 +131,35 @@ export default function DashboardControls({ currentStatus, currentSort, currentO
         </div>
 
         {/* --- CUSTOM SORT DROPDOWN --- */}
-        <div ref={sortRef} style={{ position: "relative", zIndex: 50, display: "flex", gap: "0.5rem" }}>
+        <div ref={sortRef} style={{ position: "relative", zIndex: 50 }}>
           <div onClick={() => setIsSortOpen(!isSortOpen)} style={dropdownTriggerStyle}>
             <span>{currentSortLabel}</span>
             <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.3)", transform: isSortOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</span>
           </div>
 
           <div style={{ ...popoverContainerStyle, right: 0, left: "auto", opacity: isSortOpen ? 1 : 0, transform: isSortOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.95)", pointerEvents: isSortOpen ? "auto" : "none" }}>
-            <div onClick={() => { updateParams({ sort: null, order: null }); setIsSortOpen(false); }} style={{ ...itemStyle, fontWeight: !currentSort ? 600 : 400, color: !currentSort ? "#fff" : "#9ca3af" }}>
-              <span style={{ width: "18px" }}>{!currentSort && "✓"}</span>
+            <div onClick={() => { updateParams({ sort: null, order: null }); setIsSortOpen(false); }} style={{ ...itemStyle, fontWeight: !activeSortKey ? 600 : 400, color: !activeSortKey ? "#fff" : "#9ca3af" }}>
+              <span style={{ width: "18px" }}>{!activeSortKey && "✓"}</span>
               Default Order
             </div>
             {SORT_OPTIONS.map((opt) => {
-              const isSelected = currentSort === opt.key;
+              const isSelected = activeSortKey === opt.key;
               return (
-                <div key={opt.key} onClick={() => { updateParams({ sort: opt.key, order: currentOrder }); setIsSortOpen(false); }} style={{ ...itemStyle, fontWeight: isSelected ? 500 : 400, color: isSelected ? "#fff" : "#d1d5db" }}>
+                <div 
+                  key={opt.key} 
+                  onClick={() => { 
+                    const [sortField, sortDirection] = opt.key.split("-");
+                    updateParams({ sort: sortField, order: sortDirection }); 
+                    setIsSortOpen(false); 
+                  }} 
+                  style={{ ...itemStyle, fontWeight: isSelected ? 500 : 400, color: isSelected ? "#fff" : "#d1d5db" }}
+                >
                   <span style={{ width: "18px" }}>{isSelected && "✓"}</span>
                   {opt.label}
                 </div>
               );
             })}
           </div>
-
-          {/* Sort Direction Quick Toggle Switch Button */}
-          {currentSort && (
-            <button
-              type="button"
-              onClick={() => updateParams({ order: currentOrder === "asc" ? "desc" : "asc" })}
-              style={{
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: "8px",
-                padding: "0 0.75rem",
-                height: "42px",
-                color: "#fff",
-                cursor: "pointer",
-                fontSize: "0.85rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.25rem",
-                transition: "border-color 0.15s ease",
-              }}
-            >
-              {currentOrder === "asc" ? "▲ Asc" : "▼ Desc"}
-            </button>
-          )}
         </div>
       </form>
     </div>

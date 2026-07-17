@@ -21,7 +21,7 @@ type Props = {
 export default async function DashboardPage({ searchParams }: Props) {
   const { status: statusParam, sort, order, search, add, edit } = await searchParams;
   const statusFilter = statusParam as ApplicationStatus | undefined;
-  const sortField = sort as "company" | "role" | "appliedDate" | "followUpDate" | undefined;
+  const sortField = sort as "company" | "appliedDate" | undefined;
   const sortOrder = order === "asc" ? "asc" : "desc";
   const searchQuery = search?.trim() || "";
   
@@ -239,11 +239,6 @@ export default async function DashboardPage({ searchParams }: Props) {
                 ].map((col) => (
                   <th key={col.key} style={{ padding: "1rem", color: "rgba(255, 255, 255, 0.45)", fontWeight: 600, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.04em", width: col.width }}>
                     {col.label}
-                    {sortField === col.key && (
-                      <span style={{ color: "#7c3aed", marginLeft: "0.35rem", fontSize: "0.65rem" }}>
-                        {sortOrder === "asc" ? "▲" : "▼"}
-                      </span>
-                    )}
                   </th>
                 ))}
               </tr>
