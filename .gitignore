@@ -3,3 +3,18 @@ node_modules
 .claude/settings.local.json
 .claude/worktrees/
 CLAUDE.md
+
+# Ignore the virtual environment
+.venv/
+venv/
+ENV/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore your environmental variables (if you created a .env file earlier)
+.env
+
+# Ignore large ML model files
+*.joblib
