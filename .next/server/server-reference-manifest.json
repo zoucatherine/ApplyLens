@@ -1,6 +1,6 @@
 {
   "node": {
-    "f54fa975ccc962129d61106b138669fc546626f7": {
+    "8e308db2f9b74143853dff1da5f551302cc3052e": {
       "workers": {
         "app/dashboard/page": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Czouca%5C%5CDocuments%5C%5CVSCode%5C%5Cpersonal%5C%5Cjob-tracker%5C%5Csrc%5C%5Capp%5C%5Cdashboard%5C%5Cpage.tsx%22%2C%5B%22%24%24ACTION_1%22%2C%22%24%24ACTION_0%22%5D%5D%5D&__client_imported__=!"
       },
@@ -8,7 +8,7 @@
         "app/dashboard/page": "rsc"
       }
     },
-    "8e308db2f9b74143853dff1da5f551302cc3052e": {
+    "f54fa975ccc962129d61106b138669fc546626f7": {
       "workers": {
         "app/dashboard/page": "(rsc)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22C%3A%5C%5CUsers%5C%5Czouca%5C%5CDocuments%5C%5CVSCode%5C%5Cpersonal%5C%5Cjob-tracker%5C%5Csrc%5C%5Capp%5C%5Cdashboard%5C%5Cpage.tsx%22%2C%5B%22%24%24ACTION_1%22%2C%22%24%24ACTION_0%22%5D%5D%5D&__client_imported__=!"
       },
@@ -18,5 +18,5 @@
     }
   },
   "edge": {},
-  "encryptionKey": "SY+4KF6ZBuzs1rbhR/zLt5ycnwzMlQptYcyyVRGs/Ss="
+  "encryptionKey": "ihJU7FuDFlNqr54x10no74jblixV+cyfhBbrDtMeHzQ="
 }

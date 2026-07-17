@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ApplicationStatus, STATUS_LABELS } from "@/types";
 import ApplicationRow from "./ApplicationRow";
-import StatusDropdown from "./StatusDropdown";
+import DashboardControls from "./DashboardControls";
 
 type Props = {
   searchParams: Promise<{
@@ -211,24 +211,12 @@ export default async function DashboardPage({ searchParams }: Props) {
       </div>
 
       {/* Control Filters Block */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <form style={{ display: "flex", gap: "0.75rem", width: "100%" }} action="/dashboard" method="GET">
-          {sort && <input type="hidden" name="sort" value={sort} />}
-          {order && <input type="hidden" name="order" value={order} />}
-          
-          <div style={{ position: "relative", flex: 1 }}>
-            <i className="ti ti-search" style={{ position: "absolute", left: "0.8rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255, 255, 255, 0.3)", fontSize: "1rem" }} />
-            <input
-              type="search"
-              name="search"
-              defaultValue={searchQuery}
-              placeholder="Search company, role, notes, location..."
-              className="search-container-input"
-            />
-          </div>
-          <StatusDropdown defaultValue={statusFilter || ""} />
-        </form>
-      </div>
+        <DashboardControls 
+          currentStatus={statusParam || ""}
+          currentSort={sort || ""}
+          currentOrder={sortOrder}
+          searchQuery={searchQuery}
+        />
 
       {/* Main Table Grid View */}
       <div style={{ background: "rgba(20, 15, 35, 0.6)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, overflow: "hidden" }}>
@@ -240,23 +228,22 @@ export default async function DashboardPage({ searchParams }: Props) {
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              {/* Replace the header tracking array in src/app/dashboard/page.tsx near line 160 */}
               <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.06)", textAlign: "left", background: "rgba(255, 255, 255, 0.01)" }}>
                 {[
-                  { key: "company", label: "Company", sortable: true, width: "25%" },
-                  { key: "role", label: "Role", sortable: true, width: "25%" },
-                  { key: "status", label: "Status", sortable: false, width: "20%" },
-                  { key: "appliedDate", label: "Applied", sortable: true, width: "15%" },
-                  { key: "followUpDate", label: "Follow-up", sortable: true, width: "15%" },
-                  { key: "", label: "", sortable: false, width: "50px" }, // Compressed row action block space
+                  { key: "company", label: "Company", width: "25%" },
+                  { key: "role", label: "Role", width: "25%" },
+                  { key: "status", label: "Status", width: "20%" },
+                  { key: "appliedDate", label: "Applied", width: "15%" },
+                  { key: "followUpDate", label: "Follow-up", width: "15%" },
+                  { key: "", label: "", width: "50px" }, 
                 ].map((col) => (
                   <th key={col.key} style={{ padding: "1rem", color: "rgba(255, 255, 255, 0.45)", fontWeight: 600, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.04em", width: col.width }}>
-                    {col.sortable ? (
-                      <a href={buildSortUrl(col.key)} className="th-sort-link">
-                        {col.label}
-                        {sort === col.key && <span style={{ color: "#7c3aed", fontSize: "0.65rem" }}>{sortOrder === "asc" ? "▲" : "▼"}</span>}
-                      </a>
-                    ) : col.label}
+                    {col.label}
+                    {sortField === col.key && (
+                      <span style={{ color: "#7c3aed", marginLeft: "0.35rem", fontSize: "0.65rem" }}>
+                        {sortOrder === "asc" ? "▲" : "▼"}
+                      </span>
+                    )}
                   </th>
                 ))}
               </tr>

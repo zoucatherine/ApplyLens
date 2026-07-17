@@ -1,0 +1,221 @@
+// src/app/dashboard/DashboardControls.tsx
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { PIPELINE_STATUSES, STATUS_LABELS } from "@/types";
+
+const DROPDOWN_COLORS: Record<string, string> = {
+  WISHLIST: "#eab308",
+  APPLIED: "#3b82f6",
+  PHONE_SCREEN: "#a855f7",
+  INTERVIEW: "#f97316",
+  OFFER: "#22c55e",
+  REJECTED: "#ef4444",
+  WITHDRAWN: "#6b7280",
+};
+
+const SORT_OPTIONS = [
+  { key: "company", label: "Company Name" },
+  { key: "role", label: "Role Title" },
+  { key: "appliedDate", label: "Date Applied" },
+  { key: "followUpDate", label: "Follow-up Date" },
+];
+
+type Props = {
+  currentStatus: string;
+  currentSort: string;
+  currentOrder: "asc" | "desc";
+  searchQuery: string;
+};
+
+export default function DashboardControls({ currentStatus, currentSort, currentOrder, searchQuery }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  
+  const statusRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (statusRef.current && !statusRef.current.contains(event.target as Node)) {
+        setIsStatusOpen(false);
+      }
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Update parameters natively
+  const updateParams = (updates: Record<string, string | null>) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value) {
+        current.delete(key);
+      } else {
+        current.set(key, value);
+      }
+    });
+
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
+    router.push(`/dashboard${query}`);
+  };
+
+  const currentStatusLabel = currentStatus ? STATUS_LABELS[currentStatus as any] : "All statuses";
+  const currentSortLabel = SORT_OPTIONS.find(o => o.key === currentSort)?.label || "Sort: Default";
+
+  return (
+    <div style={{ marginBottom: "1.5rem" }}>
+      <form 
+        style={{ display: "flex", gap: "0.75rem", width: "100%", alignItems: "center" }}
+        onSubmit={(e) => e.preventDefault()}
+      >
+        {/* Search Input Bar */}
+        <div style={{ position: "relative", flex: 1 }}>
+          <i className="ti ti-search" style={{ position: "absolute", left: "0.8rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255, 255, 255, 0.3)", fontSize: "1rem" }} />
+          <input
+            type="search"
+            name="search"
+            defaultValue={searchQuery}
+            placeholder="Search company, role, notes, location..."
+            className="search-container-input"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                updateParams({ search: e.currentTarget.value.trim() });
+              }
+            }}
+          />
+        </div>
+
+        {/* --- CUSTOM STATUS DROPDOWN --- */}
+        <div ref={statusRef} style={{ position: "relative", zIndex: 50 }}>
+          <div onClick={() => setIsStatusOpen(!isStatusOpen)} style={dropdownTriggerStyle}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              {currentStatus && (
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: DROPDOWN_COLORS[currentStatus] || "#fff" }} />
+              )}
+              {currentStatusLabel}
+            </span>
+            <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.3)", transform: isStatusOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</span>
+          </div>
+
+          <div style={{ ...popoverContainerStyle, opacity: isStatusOpen ? 1 : 0, transform: isStatusOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.95)", pointerEvents: isStatusOpen ? "auto" : "none" }}>
+            <div onClick={() => { updateParams({ status: null }); setIsStatusOpen(false); }} style={{ ...itemStyle, fontWeight: !currentStatus ? 600 : 400, color: !currentStatus ? "#fff" : "#9ca3af" }}>
+              <span style={{ width: "18px" }}>{!currentStatus && "✓"}</span>
+              All statuses
+            </div>
+            {PIPELINE_STATUSES.map((status) => {
+              const isSelected = currentStatus === status;
+              return (
+                <div key={status} onClick={() => { updateParams({ status }); setIsStatusOpen(false); }} style={{ ...itemStyle, fontWeight: isSelected ? 500 : 400, color: isSelected ? "#fff" : "#d1d5db" }}>
+                  <span style={{ width: "18px" }}>{isSelected && "✓"}</span>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: DROPDOWN_COLORS[status] || "#fff", marginRight: "4px" }} />
+                  {STATUS_LABELS[status]}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* --- CUSTOM SORT DROPDOWN --- */}
+        <div ref={sortRef} style={{ position: "relative", zIndex: 50, display: "flex", gap: "0.5rem" }}>
+          <div onClick={() => setIsSortOpen(!isSortOpen)} style={dropdownTriggerStyle}>
+            <span>{currentSortLabel}</span>
+            <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.3)", transform: isSortOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</span>
+          </div>
+
+          <div style={{ ...popoverContainerStyle, right: 0, left: "auto", opacity: isSortOpen ? 1 : 0, transform: isSortOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.95)", pointerEvents: isSortOpen ? "auto" : "none" }}>
+            <div onClick={() => { updateParams({ sort: null, order: null }); setIsSortOpen(false); }} style={{ ...itemStyle, fontWeight: !currentSort ? 600 : 400, color: !currentSort ? "#fff" : "#9ca3af" }}>
+              <span style={{ width: "18px" }}>{!currentSort && "✓"}</span>
+              Default Order
+            </div>
+            {SORT_OPTIONS.map((opt) => {
+              const isSelected = currentSort === opt.key;
+              return (
+                <div key={opt.key} onClick={() => { updateParams({ sort: opt.key, order: currentOrder }); setIsSortOpen(false); }} style={{ ...itemStyle, fontWeight: isSelected ? 500 : 400, color: isSelected ? "#fff" : "#d1d5db" }}>
+                  <span style={{ width: "18px" }}>{isSelected && "✓"}</span>
+                  {opt.label}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Sort Direction Quick Toggle Switch Button */}
+          {currentSort && (
+            <button
+              type="button"
+              onClick={() => updateParams({ order: currentOrder === "asc" ? "desc" : "asc" })}
+              style={{
+                background: "rgba(255, 255, 255, 0.03)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "8px",
+                padding: "0 0.75rem",
+                height: "42px",
+                color: "#fff",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.25rem",
+                transition: "border-color 0.15s ease",
+              }}
+            >
+              {currentOrder === "asc" ? "▲ Asc" : "▼ Desc"}
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// Layout styling declarations
+const dropdownTriggerStyle: React.CSSProperties = {
+  background: "rgba(255, 255, 255, 0.03)",
+  color: "#fff",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  borderRadius: 8,
+  padding: "0 1rem",
+  height: "42px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  fontSize: "0.9rem",
+  fontWeight: 500,
+  cursor: "pointer",
+  minWidth: "160px",
+  gap: "1rem",
+  userSelect: "none"
+};
+
+const popoverContainerStyle: React.CSSProperties = {
+  position: "absolute",
+  top: "calc(100% + 6px)",
+  left: 0,
+  background: "#1e1e24",
+  border: "1px solid rgba(255, 255, 255, 0.08)",
+  borderRadius: 12,
+  padding: "6px",
+  minWidth: "190px",
+  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+  transition: "opacity 0.15s ease, transform 0.15s ease",
+  transformOrigin: "top left",
+};
+
+const itemStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  padding: "0.6rem 0.75rem",
+  borderRadius: 8,
+  fontSize: "0.875rem",
+  cursor: "pointer",
+};
