@@ -18,3 +18,16 @@ __pycache__/
 
 # Ignore large ML model files
 *.joblib
+
+# Next.js build output
+.next/
+out/
+build/
+
+# Python virtual environment
+.venv/
+venv/
+ENV/
+
+# Local environment variables
+.env*.local

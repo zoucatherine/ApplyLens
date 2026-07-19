@@ -79,6 +79,17 @@ export default function DashboardControls({ currentStatus, currentSort, currentO
 
   return (
     <div style={{ marginBottom: "1.5rem" }}>
+      {/* Global CSS Style Tag for Hover Highlights */}
+      <style>{`
+        .dropdown-item-hover {
+          transition: background 0.15s ease, color 0.15s ease;
+        }
+        .dropdown-item-hover:hover {
+          background: rgba(124, 58, 237, 0.15) !important;
+          color: #fff !important;
+        }
+      `}</style>
+
       <form 
         style={{ display: "flex", gap: "0.75rem", width: "100%", alignItems: "center" }}
         onSubmit={(e) => e.preventDefault()}
@@ -113,14 +124,23 @@ export default function DashboardControls({ currentStatus, currentSort, currentO
           </div>
 
           <div style={{ ...popoverContainerStyle, opacity: isStatusOpen ? 1 : 0, transform: isStatusOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.95)", pointerEvents: isStatusOpen ? "auto" : "none" }}>
-            <div onClick={() => { updateParams({ status: null }); setIsStatusOpen(false); }} style={{ ...itemStyle, fontWeight: !currentStatus ? 600 : 400, color: !currentStatus ? "#fff" : "#9ca3af" }}>
+            <div 
+              onClick={() => { updateParams({ status: null }); setIsStatusOpen(false); }} 
+              style={{ ...itemStyle, fontWeight: !currentStatus ? 600 : 400, color: !currentStatus ? "#fff" : "#9ca3af" }}
+              className="dropdown-item-hover"
+            >
               <span style={{ width: "18px" }}>{!currentStatus && "✓"}</span>
               All statuses
             </div>
             {PIPELINE_STATUSES.map((status) => {
               const isSelected = currentStatus === status;
               return (
-                <div key={status} onClick={() => { updateParams({ status }); setIsStatusOpen(false); }} style={{ ...itemStyle, fontWeight: isSelected ? 500 : 400, color: isSelected ? "#fff" : "#d1d5db" }}>
+                <div 
+                  key={status} 
+                  onClick={() => { updateParams({ status }); setIsStatusOpen(false); }} 
+                  style={{ ...itemStyle, fontWeight: isSelected ? 500 : 400, color: isSelected ? "#fff" : "#d1d5db" }}
+                  className="dropdown-item-hover"
+                >
                   <span style={{ width: "18px" }}>{isSelected && "✓"}</span>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: DROPDOWN_COLORS[status] || "#fff", marginRight: "4px" }} />
                   {STATUS_LABELS[status]}
@@ -138,7 +158,11 @@ export default function DashboardControls({ currentStatus, currentSort, currentO
           </div>
 
           <div style={{ ...popoverContainerStyle, right: 0, left: "auto", opacity: isSortOpen ? 1 : 0, transform: isSortOpen ? "translateY(0) scale(1)" : "translateY(-8px) scale(0.95)", pointerEvents: isSortOpen ? "auto" : "none" }}>
-            <div onClick={() => { updateParams({ sort: null, order: null }); setIsSortOpen(false); }} style={{ ...itemStyle, fontWeight: !activeSortKey ? 600 : 400, color: !activeSortKey ? "#fff" : "#9ca3af" }}>
+            <div 
+              onClick={() => { updateParams({ sort: null, order: null }); setIsSortOpen(false); }} 
+              style={{ ...itemStyle, fontWeight: !activeSortKey ? 600 : 400, color: !activeSortKey ? "#fff" : "#9ca3af" }}
+              className="dropdown-item-hover"
+            >
               <span style={{ width: "18px" }}>{!activeSortKey && "✓"}</span>
               Default Order
             </div>
@@ -153,6 +177,7 @@ export default function DashboardControls({ currentStatus, currentSort, currentO
                     setIsSortOpen(false); 
                   }} 
                   style={{ ...itemStyle, fontWeight: isSelected ? 500 : 400, color: isSelected ? "#fff" : "#d1d5db" }}
+                  className="dropdown-item-hover"
                 >
                   <span style={{ width: "18px" }}>{isSelected && "✓"}</span>
                   {opt.label}
