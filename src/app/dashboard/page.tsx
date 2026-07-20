@@ -3,9 +3,11 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ApplicationStatus, STATUS_LABELS } from "@/types";
+import { ApplicationStatus, STATUS_LABELS, DashboardView} from "@/types";
 import ApplicationRow from "./ApplicationRow";
 import DashboardControls from "./DashboardControls";
+import ApplicationCard from "./ApplicationCard";
+import KanbanBoard from "./KanbanBoard"
 
 type Props = {
   searchParams: Promise<{
@@ -14,7 +16,8 @@ type Props = {
     order?: string;
     search?: string;
     add?: string;
-    edit?: string; // Query param to trigger editing modal state
+    edit?: string;
+    view?: string;
   }>;
 };
 
@@ -27,6 +30,9 @@ export default async function DashboardPage({ searchParams }: Props) {
   
   const showAddModal = add === "true";
   const editId = edit || null;
+
+  const { view } = await searchParams;
+  const currentView = (view as DashboardView) || "list"; // default to list vie
 
   // Fetch target application data if we are editing
   const editingApp = editId 
@@ -260,6 +266,27 @@ export default async function DashboardPage({ searchParams }: Props) {
           </table>
         )}
       </div>
+      {/* Main Content Layout Switcher */}
+        {currentView === "list" && (
+          <div className="table-view-container">
+            {/* Keep your existing <table> structure here */}
+          </div>
+        )}
+
+        {currentView === "cards" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.25rem" }}>
+            {applications.map(app => (
+              <ApplicationCard key={app.id} app={app} />
+            ))}
+          </div>
+        )}
+
+        {currentView === "kanban" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", alignItems: "start" }}>
+            {/* Map over your PIPELINE_STATUSES and group applications by status column */}
+            <KanbanBoard applications={applications} />
+          </div>
+        )}
 
       {/* ========================================================= */}
       {/* GLASSMORPHIC INTERACTIVE OVERLAY MODAL WITH ANIMATION      */}

@@ -78,3 +78,5 @@ export const SOURCE_LABELS: Record<ApplicationSource, string> = {
   CAREER_FAIR: "Career Fair",
   OTHER: "Other",
 };
+
+export type DashboardView = "list" | "cards" | "kanban";

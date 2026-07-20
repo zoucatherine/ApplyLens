@@ -28,9 +28,10 @@ type Props = {
   currentSort: string;
   currentOrder: "asc" | "desc";
   searchQuery: string;
+  currentView: "list" | "cards" | "kanban"; // <-- ADD THIS
 };
 
-export default function DashboardControls({ currentStatus, currentSort, currentOrder, searchQuery }: Props) {
+export default function DashboardControls({ currentStatus, currentSort, currentOrder, searchQuery, currentView }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -186,6 +187,33 @@ export default function DashboardControls({ currentStatus, currentSort, currentO
             })}
           </div>
         </div>
+        {/* Add this inside the flex container of your DashboardControls.tsx form */}
+          <div style={{ display: "flex", background: "rgba(255, 255, 255, 0.03)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: 8, padding: 3, gap: 2 }}>
+            {(["list", "cards", "kanban"] as const).map((v) => {
+              const isActive = currentView === v; // Pass currentView down as a prop from page.tsx
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => updateParams({ view: v })}
+                  style={{
+                    background: isActive ? "#7c3aed" : "transparent",
+                    color: isActive ? "#fff" : "rgba(255,255,255,0.4)",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "0.4rem 0.8rem",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    textTransform: "capitalize",
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  {v}
+                </button>
+              );
+            })}
+          </div>
       </form>
     </div>
   );
