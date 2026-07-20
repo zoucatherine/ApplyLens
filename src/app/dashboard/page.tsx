@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ApplicationStatus, STATUS_LABELS, DashboardView} from "@/types";
+import { ApplicationStatus, STATUS_LABELS, DashboardView } from "@/types";
 import ApplicationRow from "./ApplicationRow";
 import DashboardControls from "./DashboardControls";
 import ApplicationCard from "./ApplicationCard";
-import KanbanBoard from "./KanbanBoard"
+import KanbanBoard from "./KanbanBoard";
 
 type Props = {
   searchParams: Promise<{
@@ -22,21 +22,28 @@ type Props = {
 };
 
 export default async function DashboardPage({ searchParams }: Props) {
-  const { status: statusParam, sort, order, search, add, edit } = await searchParams;
+  const {
+    status: statusParam,
+    sort,
+    order,
+    search,
+    add,
+    edit,
+    view,
+  } = await searchParams;
+
   const statusFilter = statusParam as ApplicationStatus | undefined;
   const sortField = sort as "company" | "appliedDate" | undefined;
   const sortOrder = order === "asc" ? "asc" : "desc";
   const searchQuery = search?.trim() || "";
-  
+  const currentView = (view as DashboardView) || "list";
+
   const showAddModal = add === "true";
   const editId = edit || null;
 
-  const { view } = await searchParams;
-  const currentView = (view as DashboardView) || "list"; // default to list vie
-
   // Fetch target application data if we are editing
-  const editingApp = editId 
-    ? await prisma.application.findUnique({ where: { id: editId } }) 
+  const editingApp = editId
+    ? await prisma.application.findUnique({ where: { id: editId } })
     : null;
 
   const sortFieldMap: Record<string, string> = {
@@ -50,6 +57,7 @@ export default async function DashboardPage({ searchParams }: Props) {
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
     if (searchQuery) params.set("search", searchQuery);
+    if (currentView) params.set("view", currentView);
     if (sort === field) {
       params.set("sort", field);
       params.set("order", sortOrder === "asc" ? "desc" : "asc");
@@ -60,12 +68,24 @@ export default async function DashboardPage({ searchParams }: Props) {
     return `/dashboard?${params.toString()}`;
   };
 
+  const getAddUrl = () => {
+    const params = new URLSearchParams();
+    if (statusFilter) params.set("status", statusFilter);
+    if (searchQuery) params.set("search", searchQuery);
+    if (sort) params.set("sort", sort);
+    if (order) params.set("order", order);
+    if (currentView) params.set("view", currentView);
+    params.set("add", "true");
+    return `/dashboard?${params.toString()}`;
+  };
+
   const getCancelUrl = () => {
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
     if (searchQuery) params.set("search", searchQuery);
     if (sort) params.set("sort", sort);
     if (order) params.set("order", order);
+    if (currentView) params.set("view", currentView);
     const str = params.toString();
     return str ? `/dashboard?${str}` : "/dashboard";
   };
@@ -83,11 +103,15 @@ export default async function DashboardPage({ searchParams }: Props) {
         role,
         status: formData.get("status") as string,
         location: (formData.get("location") as string) || null,
-        salary: (formData.get("salaryRange") as string) || null,
+        salary: (formData.get("salary") as string) || null,
         jobUrl: (formData.get("jobUrl") as string) || null,
         notes: (formData.get("notes") as string) || null,
-        appliedDate: formData.get("appliedDate") ? new Date(formData.get("appliedDate") as string) : new Date(),
-        followUpDate: formData.get("followUpDate") ? new Date(formData.get("followUpDate") as string) : null,
+        appliedDate: formData.get("appliedDate")
+          ? new Date(formData.get("appliedDate") as string)
+          : new Date(),
+        followUpDate: formData.get("followUpDate")
+          ? new Date(formData.get("followUpDate") as string)
+          : null,
       },
     });
     revalidatePath("/dashboard");
@@ -109,11 +133,15 @@ export default async function DashboardPage({ searchParams }: Props) {
         role,
         status: formData.get("status") as string,
         location: (formData.get("location") as string) || null,
-        salary: (formData.get("salaryRange") as string) || null,
+        salary: (formData.get("salary") as string) || null,
         jobUrl: (formData.get("jobUrl") as string) || null,
         notes: (formData.get("notes") as string) || null,
-        appliedDate: formData.get("appliedDate") ? new Date(formData.get("appliedDate") as string) : new Date(),
-        followUpDate: formData.get("followUpDate") ? new Date(formData.get("followUpDate") as string) : null,
+        appliedDate: formData.get("appliedDate")
+          ? new Date(formData.get("appliedDate") as string)
+          : new Date(),
+        followUpDate: formData.get("followUpDate")
+          ? new Date(formData.get("followUpDate") as string)
+          : null,
       },
     });
     revalidatePath("/dashboard");
@@ -136,14 +164,14 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const applications = await prisma.application.findMany({
     where,
-    orderBy: sortField && sortFieldMap[sortField]
-      ? { [sortFieldMap[sortField]]: sortOrder }
-      : { updatedAt: "desc" },
+    orderBy:
+      sortField && sortFieldMap[sortField]
+        ? { [sortFieldMap[sortField]]: sortOrder }
+        : { updatedAt: "desc" },
   });
 
   return (
     <div style={{ maxWidth: 2000, margin: "0 auto", padding: "2rem 2.5rem" }}>
-      
       <style>{`
         .search-container-input {
           width: 100%;
@@ -198,9 +226,9 @@ export default async function DashboardPage({ searchParams }: Props) {
             {applications.length > 0 && ` — ${applications.length} result${applications.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        
+
         <Link
-          href={`/dashboard?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(statusFilter ? { status: statusFilter } : {})), add: "true" }).toString()}`}
+          href={getAddUrl()}
           style={{
             background: "var(--accent, #7c3aed)",
             color: "#fff",
@@ -217,82 +245,91 @@ export default async function DashboardPage({ searchParams }: Props) {
       </div>
 
       {/* Control Filters Block */}
-        <DashboardControls 
-          currentStatus={statusParam || ""}
-          currentSort={sort || ""}
-          currentOrder={sortOrder}
-          searchQuery={searchQuery}
-        />
+      <DashboardControls
+        currentStatus={statusParam || ""}
+        currentSort={sort || ""}
+        currentOrder={sortOrder}
+        searchQuery={searchQuery}
+      />
 
-      {/* Main Table Grid View */}
-      <div style={{ background: "rgba(20, 15, 35, 0.6)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, overflow: "hidden" }}>
-        {applications.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "5rem 2rem", color: "rgba(255, 255, 255, 0.35)" }}>
-            <i className="ti ti-folder-off" style={{ fontSize: "2rem", marginBottom: "0.5rem", display: "block" }} />
-            <p style={{ fontSize: "0.95rem", margin: 0 }}>No entries matching filter view parameters.</p>
-          </div>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.06)", textAlign: "left", background: "rgba(255, 255, 255, 0.01)" }}>
-                {[
-                  { key: "company", label: "Company", width: "25%" },
-                  { key: "role", label: "Role", width: "25%" },
-                  { key: "status", label: "Status", width: "20%" },
-                  { key: "appliedDate", label: "Applied", width: "15%" },
-                  { key: "followUpDate", label: "Follow-up", width: "15%" },
-                  { key: "", label: "", width: "50px" }, 
-                ].map((col) => (
-                  <th key={col.key} style={{ padding: "1rem", color: "rgba(255, 255, 255, 0.45)", fontWeight: 600, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.04em", width: col.width }}>
-                    {col.label}
-                  </th>
+      {/* Main Content Layout Views */}
+      {currentView === "list" && (
+        <div style={{ background: "rgba(20, 15, 35, 0.6)", border: "1px solid rgba(255, 255, 255, 0.06)", borderRadius: 12, overflow: "hidden" }}>
+          {applications.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "5rem 2rem", color: "rgba(255, 255, 255, 0.35)" }}>
+              <i className="ti ti-folder-off" style={{ fontSize: "2rem", marginBottom: "0.5rem", display: "block" }} />
+              <p style={{ fontSize: "0.95rem", margin: 0 }}>No entries matching filter view parameters.</p>
+            </div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.06)", textAlign: "left", background: "rgba(255, 255, 255, 0.01)" }}>
+                  {[
+                    { key: "company", label: "Company", width: "25%", sortable: true },
+                    { key: "role", label: "Role", width: "25%", sortable: false },
+                    { key: "status", label: "Status", width: "20%", sortable: false },
+                    { key: "appliedDate", label: "Applied", width: "15%", sortable: true },
+                    { key: "followUpDate", label: "Follow-up", width: "15%", sortable: false },
+                    { key: "", label: "", width: "50px", sortable: false },
+                  ].map((col, idx) => (
+                    <th key={col.key || idx} style={{ padding: "1rem", color: "rgba(255, 255, 255, 0.45)", fontWeight: 600, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.04em", width: col.width }}>
+                      {col.sortable ? (
+                        <Link href={buildSortUrl(col.key)} className="th-sort-link">
+                          {col.label}
+                          {sort === col.key && (sortOrder === "asc" ? " ↑" : " ↓")}
+                        </Link>
+                      ) : (
+                        col.label
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map((app) => (
+                  <ApplicationRow
+                    key={`${app.id}-${editId}`}
+                    app={app}
+                    currentFilters={{
+                      status: statusParam || "",
+                      search: search || "",
+                      sort: sort || "",
+                      order: order || "",
+                      view: currentView,
+                    }}
+                  />
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {currentView === "cards" && (
+        <div>
+          {applications.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "5rem 2rem", color: "rgba(255, 255, 255, 0.35)" }}>
+              <p style={{ fontSize: "0.95rem", margin: 0 }}>No entries matching filter view parameters.</p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.25rem" }}>
               {applications.map((app) => (
-                <ApplicationRow 
-                  key={`${app.id}-${editId}`} // <-- Changing the key forces a partial row state recalculation when editId shifts
-                  app={app} 
-                  currentFilters={{
-                    status: statusParam || "",
-                    search: search || "",
-                    sort: sort || "",
-                    order: order || "",
-                  }} 
-                />
+                <ApplicationCard key={app.id} app={app} />
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      {/* Main Content Layout Switcher */}
-        {currentView === "list" && (
-          <div className="table-view-container">
-            {/* Keep your existing <table> structure here */}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
-        {currentView === "cards" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.25rem" }}>
-            {applications.map(app => (
-              <ApplicationCard key={app.id} app={app} />
-            ))}
-          </div>
-        )}
+      {currentView === "kanban" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", alignItems: "start" }}>
+          <KanbanBoard applications={applications} />
+        </div>
+      )}
 
-        {currentView === "kanban" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", alignItems: "start" }}>
-            {/* Map over your PIPELINE_STATUSES and group applications by status column */}
-            <KanbanBoard applications={applications} />
-          </div>
-        )}
-
-      {/* ========================================================= */}
-      {/* GLASSMORPHIC INTERACTIVE OVERLAY MODAL WITH ANIMATION      */}
-      {/* ========================================================= */}
+      {/* Modal View */}
       {(showAddModal || editingApp) && (
-        <div 
+        <div
           className="modal-backdrop"
           style={{
             position: "fixed",
@@ -303,10 +340,10 @@ export default async function DashboardPage({ searchParams }: Props) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "2rem"
+            padding: "2rem",
           }}
         >
-          <div 
+          <div
             className="modal-panel"
             style={{
               background: "rgba(20, 16, 33, 0.95)",
@@ -316,7 +353,7 @@ export default async function DashboardPage({ searchParams }: Props) {
               maxWidth: "640px",
               boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124, 58, 237, 0.05)",
               padding: "2rem",
-              boxSizing: "border-box"
+              boxSizing: "border-box",
             }}
           >
             {/* Modal Header */}
@@ -334,7 +371,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
             <form action={editingApp ? handleUpdateApplication : handleCreateApplication} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {editingApp && <input type="hidden" name="id" value={editingApp.id} />}
-              
+
               {/* Row 1: Company + Role */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
@@ -367,20 +404,20 @@ export default async function DashboardPage({ searchParams }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={modalLabelStyle}>Applied Date</label>
-                  <input 
-                    type="date" 
-                    name="appliedDate" 
-                    defaultValue={editingApp ? new Date(editingApp.appliedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]} 
-                    className="modal-input" 
+                  <input
+                    type="date"
+                    name="appliedDate"
+                    defaultValue={editingApp ? new Date(editingApp.appliedDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
+                    className="modal-input"
                   />
                 </div>
                 <div>
                   <label style={modalLabelStyle}>Follow-Up Reminder</label>
-                  <input 
-                    type="date" 
-                    name="followUpDate" 
-                    defaultValue={editingApp?.followUpDate ? new Date(editingApp.followUpDate).toISOString().split('T')[0] : ""} 
-                    className="modal-input" 
+                  <input
+                    type="date"
+                    name="followUpDate"
+                    defaultValue={editingApp?.followUpDate ? new Date(editingApp.followUpDate).toISOString().split('T')[0] : ""}
+                    className="modal-input"
                   />
                 </div>
               </div>
@@ -400,12 +437,12 @@ export default async function DashboardPage({ searchParams }: Props) {
               {/* Row 5: Notes */}
               <div>
                 <label style={modalLabelStyle}>Notes</label>
-                <textarea 
-                  name="notes" 
-                  rows={3} 
+                <textarea
+                  name="notes"
+                  rows={3}
                   defaultValue={editingApp?.notes || ""}
-                  placeholder="Recruiter context, referral tracking or tech parameters..." 
-                  className="modal-input" 
+                  placeholder="Recruiter context, referral tracking or tech parameters..."
+                  className="modal-input"
                   style={{ resize: "none", fontFamily: "inherit" }}
                 />
               </div>
